@@ -7,12 +7,11 @@ use App\Http\Requests\UpdateAppointmentStatusRequest;
 use App\Models\Appointment;
 use App\Models\Dentist;
 use App\Models\Patient;
+use App\Services\AppointmentAvailability;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use App\Services\AppointmentAvailability;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -64,8 +63,13 @@ class AppointmentController extends Controller
     {
         $validated = $request->validated();
         $startsAt = Carbon::parse($validated['starts_at']);
-        DB::transaction(function () use ($validated, $startsAt, $availability): void {
-            $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
+        $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
+
+        $availability->withDentistScheduleLock($dentist, $startsAt, function () use ($validated, $startsAt, $availability): void {
+            $dentist = Dentist::query()
+                ->where('is_active', true)
+                ->lockForUpdate()
+                ->findOrFail($validated['dentist_id']);
             $schedule = $dentist->schedules()
                 ->where('weekday', $startsAt->dayOfWeekIso)
                 ->lockForUpdate()

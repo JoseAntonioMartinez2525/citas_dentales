@@ -48,6 +48,7 @@ class PatientPortalController extends Controller
             ->map(fn(Appointment $appointment): array => [
                 'id' => $appointment->id,
                 'service_name' => $appointment->service_name,
+                'dentist_name' => $appointment->dentist_name,
                 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'),
                 'duration_minutes' => $appointment->duration_minutes,
                 'status' => $appointment->status,

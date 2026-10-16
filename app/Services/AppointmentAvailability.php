@@ -8,9 +8,30 @@ use App\Models\Schedule;
 use App\Models\Service;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Closure;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AppointmentAvailability
 {
+    /**
+     * @template TResult
+     *
+     * @param Closure(): TResult $callback
+     * @return TResult
+     */
+    public function withDentistScheduleLock(
+        Dentist $dentist,
+        CarbonInterface $startsAt,
+        Closure $callback,
+    ): mixed {
+        $lockKey = 'appointment-dentist-'.$dentist->id.'-'.$startsAt->toDateString();
+
+        return Cache::store('database')
+            ->lock($lockKey, 30)
+            ->block(10, fn (): mixed => DB::transaction($callback));
+    }
+
     /** @return array<int, array{value: string, label: string}> */
     public function slots(Service $service, string $date, Dentist $dentist): array
     {

@@ -4,19 +4,21 @@ import { expect, test } from '@playwright/test';
 const viewportWidths = [320, 375, 768, 1280];
 
 test('booking page has no horizontal overflow at supported widths', async ({ page }) => {
-    await page.goto('/');
+    for (const route of ['/', '/evaluacion/card-sorting', '/evaluacion/sus']) {
+        await page.goto(route);
 
-    for (const width of viewportWidths) {
-        await page.setViewportSize({ width, height: 900 });
-        const dimensions = await page.evaluate(() => ({
-            viewport: window.innerWidth,
-            document: document.documentElement.scrollWidth,
-            body: document.body.scrollWidth,
-        }));
+        for (const width of viewportWidths) {
+            await page.setViewportSize({ width, height: 900 });
+            const dimensions = await page.evaluate(() => ({
+                viewport: window.innerWidth,
+                document: document.documentElement.scrollWidth,
+                body: document.body.scrollWidth,
+            }));
 
-        expect(dimensions.document, `document overflows at ${width}px`).toBeLessThanOrEqual(width);
-        expect(dimensions.body, `body overflows at ${width}px`).toBeLessThanOrEqual(width);
-        expect(dimensions.viewport).toBe(width);
+            expect(dimensions.document, `${route} document overflows at ${width}px`).toBeLessThanOrEqual(width);
+            expect(dimensions.body, `${route} body overflows at ${width}px`).toBeLessThanOrEqual(width);
+            expect(dimensions.viewport).toBe(width);
+        }
     }
 });
 

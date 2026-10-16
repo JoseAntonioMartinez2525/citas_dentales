@@ -13,18 +13,6 @@ use Illuminate\Validation\Validator;
 
 class StorePublicAppointmentRequest extends FormRequest
 {
-    protected function prepareForValidation(): void
-    {
-        if ($this->missing('dentist_id')) {
-            $this->merge([
-                'dentist_id' => Dentist::query()
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->value('id'),
-            ]);
-        }
-    }
-
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -55,7 +43,7 @@ class StorePublicAppointmentRequest extends FormRequest
     {
         return [
             function (Validator $validator) use ($availability): void {
-                if ($validator->errors()->hasAny(['service_id', 'dentist_id', 'date', 'starts_at'])) {
+                if ($validator->errors()->isNotEmpty()) {
                     return;
                 }
 

@@ -4,11 +4,11 @@ namespace App\Http\Requests;
 
 use App\Models\Appointment;
 use App\Models\Dentist;
+use App\Services\AppointmentAvailability;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use App\Services\AppointmentAvailability;
 
 class StoreAppointmentRequest extends FormRequest
 {
@@ -41,7 +41,7 @@ class StoreAppointmentRequest extends FormRequest
     {
         return [
             function (Validator $validator) use ($availability): void {
-                if ($validator->errors()->hasAny(['dentist_id', 'starts_at', 'duration_minutes'])) {
+                if ($validator->errors()->isNotEmpty()) {
                     return;
                 }
 

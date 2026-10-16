@@ -7,15 +7,13 @@ use App\Models\Appointment;
 use App\Models\Dentist;
 use App\Models\Patient;
 use App\Models\PatientPortalAccess;
-use App\Models\Schedule;
 use App\Models\Service;
 use App\Services\AppointmentAvailability;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -71,64 +69,72 @@ class PublicBookingController extends Controller
     {
         $validated = $request->validated();
         $startsAt = Carbon::createFromFormat('Y-m-d\\TH:i', $validated['starts_at'], config('app.timezone'));
-        [$appointment, $patient, $service, $portalToken] = DB::transaction(function () use ($request, $validated, $startsAt, $availability): array {
-            $service = Service::query()->where('is_active', true)->findOrFail($validated['service_id']);
-            $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
+        $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
+        [$appointment, $patient, $service, $portalToken] = $availability->withDentistScheduleLock(
+            $dentist,
+            $startsAt,
+            function () use ($request, $validated, $startsAt, $availability): array {
+                $service = Service::query()->where('is_active', true)->findOrFail($validated['service_id']);
+                $dentist = Dentist::query()
+                    ->where('is_active', true)
+                    ->lockForUpdate()
+                    ->findOrFail($validated['dentist_id']);
 
-            $schedule = Schedule::query()
-                ->where('dentist_id', $dentist->id)
-                ->where('weekday', $startsAt->dayOfWeekIso)
-                ->lockForUpdate()
-                ->first();
+                $schedule = Schedule::query()
+                    ->where('dentist_id', $dentist->id)
+                    ->where('weekday', $startsAt->dayOfWeekIso)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (! $schedule || ! $availability->isAvailable($service, $startsAt, $dentist)) {
-                throw ValidationException::withMessages([
-                    'starts_at' => 'Ese horario ya no está disponible. Selecciona otra hora.',
+                if (! $schedule || ! $availability->isAvailable($service, $startsAt, $dentist)) {
+                    throw ValidationException::withMessages([
+                        'starts_at' => 'Ese horario ya no está disponible. Selecciona otra hora.',
+                    ]);
+                }
+
+                $patient = Patient::query()->find($request->session()->get('booking_patient_id'));
+
+                if (! $patient || $patient->phone !== $validated['phone']) {
+                    $patient = Patient::query()->create([
+                        'name' => $validated['name'],
+                        'phone' => $validated['phone'],
+                        'email' => $validated['email'] ?? null,
+                    ]);
+                } else {
+                    $patient->update([
+                        'name' => $validated['name'],
+                        'email' => $validated['email'] ?? null,
+                    ]);
+                }
+
+                $portalToken = $request->session()->get('booking_portal_token');
+                $portalAccess = PatientPortalAccess::query()->where('patient_id', $patient->id)->first();
+                $portalTokenHash = is_string($portalToken) ? hash('sha256', $portalToken) : null;
+
+                if (! $portalAccess || ! $portalTokenHash || ! hash_equals($portalAccess->token_hash, $portalTokenHash)) {
+                    $portalToken = Str::random(64);
+                    PatientPortalAccess::query()->updateOrCreate(
+                        ['patient_id' => $patient->id],
+                        ['token_hash' => hash('sha256', $portalToken)],
+                    );
+                }
+
+                $appointment = Appointment::query()->create([
+                    'patient_id' => $patient->id,
+                    'dentist_id' => $dentist->id,
+                    'service_id' => $service->id,
+                    'dentist_name' => $dentist->name,
+                    'service_name' => $service->name,
+                    'starts_at' => $startsAt,
+                    'ends_at' => $startsAt->copy()->addMinutes($service->duration_minutes),
+                    'duration_minutes' => $service->duration_minutes,
+                    'buffer_minutes' => $service->buffer_minutes,
+                    'status' => 'scheduled',
                 ]);
-            }
 
-            $patient = Patient::query()->find($request->session()->get('booking_patient_id'));
-
-            if (! $patient || $patient->phone !== $validated['phone']) {
-                $patient = Patient::query()->create([
-                    'name' => $validated['name'],
-                    'phone' => $validated['phone'],
-                    'email' => $validated['email'] ?? null,
-                ]);
-            } else {
-                $patient->update([
-                    'name' => $validated['name'],
-                    'email' => $validated['email'] ?? null,
-                ]);
-            }
-
-            $portalToken = $request->session()->get('booking_portal_token');
-            $portalAccess = PatientPortalAccess::query()->where('patient_id', $patient->id)->first();
-            $portalTokenHash = is_string($portalToken) ? hash('sha256', $portalToken) : null;
-
-            if (! $portalAccess || ! $portalTokenHash || ! hash_equals($portalAccess->token_hash, $portalTokenHash)) {
-                $portalToken = Str::random(64);
-                PatientPortalAccess::query()->updateOrCreate(
-                    ['patient_id' => $patient->id],
-                    ['token_hash' => hash('sha256', $portalToken)],
-                );
-            }
-
-            $appointment = Appointment::query()->create([
-                'patient_id' => $patient->id,
-                'dentist_id' => $dentist->id,
-                'service_id' => $service->id,
-                'dentist_name' => $dentist->name,
-                'service_name' => $service->name,
-                'starts_at' => $startsAt,
-                'ends_at' => $startsAt->copy()->addMinutes($service->duration_minutes),
-                'duration_minutes' => $service->duration_minutes,
-                'buffer_minutes' => $service->buffer_minutes,
-                'status' => 'scheduled',
-            ]);
-
-            return [$appointment, $patient, $service, $portalToken];
-        });
+                return [$appointment, $patient, $service, $portalToken];
+            },
+        );
 
         $request->session()->put([
             'booking_patient_id' => $patient->id,

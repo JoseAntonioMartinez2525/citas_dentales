@@ -8,6 +8,7 @@ const statusLabels = {
     confirmed: 'Confirmada',
     completed: 'Completada',
     cancelled: 'Cancelada',
+    no_show: 'No asistió',
 };
 
 const statusClasses = {
@@ -15,6 +16,7 @@ const statusClasses = {
     confirmed: 'bg-[#e8eef4] text-[#365c78] dark:bg-[#293a47] dark:text-[#c3daea]',
     completed: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
     cancelled: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200',
+    no_show: 'bg-orange-50 text-orange-800 dark:bg-orange-950/40 dark:text-orange-200',
 };
 
 export default function Appointments({ appointments, cancellationDeadlineHours, flash = {} }) {
@@ -71,6 +73,7 @@ export default function Appointments({ appointments, cancellationDeadlineHours, 
                                             </div>
                                             <p className="mt-2 flex items-center gap-2 text-sm text-[#6f7a73] dark:text-[#a0afb9]"><CalendarDays size={15} />{appointment.starts_at}</p>
                                             <p className="mt-1 flex items-center gap-2 text-xs text-[#89938d] dark:text-[#94a4af]"><Clock3 size={14} />{appointment.duration_minutes} minutos</p>
+                                            <p className="mt-1 text-xs text-[#89938d] dark:text-[#94a4af]">Odontólogo: {appointment.dentist_name}</p>
                                         </div>
                                         {appointment.can_cancel && (
                                             <button type="button" onClick={() => cancelAppointment(appointment)} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-rose-200 px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-950/40 sm:self-auto">

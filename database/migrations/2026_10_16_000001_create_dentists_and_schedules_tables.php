@@ -29,6 +29,7 @@ return new class extends Migration
 
         Schema::table('appointments', function (Blueprint $table) {
             $table->foreignId('dentist_id')->nullable()->after('patient_id')->constrained()->nullOnDelete();
+            $table->index(['dentist_id', 'starts_at', 'status']);
         });
 
         $dentistNames = DB::table('appointments')->distinct()->pluck('dentist_name')->all();

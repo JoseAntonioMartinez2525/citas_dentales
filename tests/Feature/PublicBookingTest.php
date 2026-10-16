@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Appointment;
 use App\Models\Dentist;
 use App\Models\Patient;
+use App\Models\Schedule;
 use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,9 +33,11 @@ class PublicBookingTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create(['duration_minutes' => 45, 'buffer_minutes' => 15]);
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T10:00',
             'name' => 'Paciente de prueba',
@@ -73,6 +76,7 @@ class PublicBookingTest extends TestCase
 
         $this->from('/')->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => Dentist::query()->where('name', 'Equipo dental')->value('id'),
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T10:30',
             'name' => 'Paciente de prueba',
@@ -142,9 +146,11 @@ class PublicBookingTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create(['duration_minutes' => 30, 'buffer_minutes' => 15]);
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T10:00',
             'name' => 'Paciente de prueba',
@@ -180,7 +186,7 @@ class PublicBookingTest extends TestCase
             'id' => $appointment->id,
             'status' => 'cancelled',
         ]);
-        $this->get('/?service_id=' . $service->id . '&date=2026-10-12')
+        $this->get('/?service_id=' . $service->id . '&dentist_id=' . $dentist->id . '&date=2026-10-12')
             ->assertInertia(fn(Assert $page) => $page->where('slots.4.label', '10:00'));
     }
 
@@ -193,9 +199,11 @@ class PublicBookingTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create();
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T10:00',
             'name' => 'Paciente de prueba',
@@ -219,7 +227,10 @@ class PublicBookingTest extends TestCase
             'name' => 'Paciente existente',
             'phone' => '0000000085',
         ]);
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
         $existingAppointment = Appointment::factory()->for($existingPatient)->create([
+            'dentist_id' => $dentist->id,
+            'dentist_name' => $dentist->name,
             'starts_at' => '2026-10-12 10:00:00',
             'ends_at' => '2026-10-12 10:30:00',
         ]);
@@ -227,6 +238,7 @@ class PublicBookingTest extends TestCase
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T11:00',
             'name' => 'Otra persona de prueba',
@@ -247,13 +259,17 @@ class PublicBookingTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create();
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
         $appointment = Appointment::factory()->create([
+            'dentist_id' => $dentist->id,
+            'dentist_name' => $dentist->name,
             'starts_at' => '2026-10-12 10:00:00',
             'ends_at' => '2026-10-12 10:30:00',
         ]);
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T11:00',
             'name' => 'Paciente de prueba',

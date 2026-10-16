@@ -41,10 +41,10 @@
 | OE1: Identificar requerimientos | IMPLEMENTADO | `docs/...md` §2.3 Reglas del dominio; migraciones y config `clinic.php` definen duración, horarios, disponibilidad, cancelaciones, anticipación mínima. | Documentado y parcialmente implementado. |
 | OE2: Arquitectura de información y flujos | IMPLEMENTADO | `routes/web.php:10-17` define las rutas de reserva (`booking.start`, `booking.store`, `booking.success`) y portal (`patient.appointments`, `patient.appointments.cancel`). | Arquitectura de rutas implementada. |
 | OE3: Interfaz consistente | IMPLEMENTADO | Componentes compartidos (`ThemeToggle.jsx`, `DentalMark.jsx`), estilos consistentes en `app.css`, modo claro/oscuro persistente. | Verificado en vistas. |
-| OE4: Prevención y recuperación de errores | IMPLEMENTADO (PARCIAL) | Validaciones en `StorePublicAppointmentRequest` (disponibilidad, servicio activo, anti-solapamiento); errores mostrados junto al flujo. <br> **Falta:** bloqueo transaccional para doble reserva simultánea (riesgo documentado en `docs/...md` §1.4 tabla de préstamos heurísticos). | Riesgo de carrera sin resolución transaccional. |
-| OE5: Gestión de servicios, horarios, pacientes, citas | IMPLEMENTADO (PARCIAL) | Citas y pacientes: implementado (`AppointmentController`, `PatientController`). <br> **Servicios:** solo listados públicos; no hay CRUD de administración (¡falta controlador y rutas admin para servicios!). <br> **Horarios:** configuración estática en `config/clinic.php`; no hay modelo de horarios ni gestión dinámica. | Faltan: CRUD de servicios, gestión de horarios. |
-| OE6: Criterios básicos de accesibilidad | IMPLEMENTADO (PARCIAL) | `aria-label`, `aria-invalid`, `aria-describedby`, `aria-current`, `role="status"/"alert"`, foco visible (`focus-visible:outline`), navegación por teclado. <br> **Falta:** auditoría formal con lector de pantalla, contraste medido con herramienta. | Ver `docs/...md` §9.4. |
-| OE7: Evaluación heurística y tareas con participantes | FALTANTE | Existe inspección heurística en `docs/...md` §9.1 pero no hay ejecución formal con participantes. No hay SUS aplicado, no hay sesiones grabadas. | Pendiente. |
+| OE4: Prevención y recuperación de errores | IMPLEMENTADO | `StorePublicAppointmentRequest` valida disponibilidad y `AppointmentAvailability::withDentistScheduleLock()` serializa las reservas mediante el lock compartido de base de datos, una transacción y revalidación antes de crear la cita. | La ejecución de pruebas concurrentes queda pendiente en el entorno PHP 8.5 del proyecto. |
+| OE5: Gestión de servicios, horarios, pacientes, citas | IMPLEMENTADO | Citas y pacientes (`AppointmentController`, `PatientController`), CRUD de servicios (`ServiceController`) y horarios/odontólogos (`ScheduleController`, `Schedule`, `Dentist`). | Los horarios se administran por odontólogo y ya no dependen de `config/clinic.php`. |
+| OE6: Criterios básicos de accesibilidad | IMPLEMENTADO (PARCIAL) | Semántica y foco de teclado existentes; axe-core automatizado para reserva, Card Sorting y SUS, además de contraste WCAG y foco visible. | El análisis automatizado no sustituye pruebas con lector de pantalla ni evaluación humana. |
+| OE7: Evaluación heurística y tareas con participantes | IMPLEMENTADO (PARCIAL) | El sistema ahora incluye Card Sorting abierto y cuestionario SUS anónimos con persistencia y resumen administrativo. | La participación real, la evaluación heurística externa y las sesiones registradas siguen pendientes. |
 | OE8: Análisis y mejoras iterativas | IMPLEMENTADO (PARCIAL) | Iteraciones I01-I04 documentadas en `docs/...md` §10. | Implementado parcialmente. |
 
 ---
@@ -63,11 +63,11 @@
 
 | Ítem | Estado | Sistema | Observaciones |
 |------|--------|---------|---------------|
-| Diseño CardSorting | FALTANTE | No hay configuración ni herramienta de CardSorting en el sistema. | Pendiente integrar OptimalWorkshop/UXWeak o similar. |
-| Tipo de CardSorting | FALTANTE | No definido. | Pendiente. |
+| Diseño CardSorting | IMPLEMENTADO | Interfaz propia de clasificación con arrastrar/soltar, alternativa accesible por selectores y persistencia anónima. | `Evaluations/CardSorting.jsx`, `CardSortingController` y `card_sorting_responses`. |
+| Tipo de CardSorting | IMPLEMENTADO | Clasificación abierta: los participantes crean y nombran sus propias categorías. | No depende de OptimalWorkshop/UXWeak. |
 | Análisis de participantes | FALTANTE | No hay datos de participantes. | Pendiente. |
-| Tarjetas / Categorías / Subcategorías | FALTANTE | No hay tarjetas definidas. | Pendiente. |
-| Pre-test / Post-test | FALTANTE | No hay cuestionarios. | Pendiente. |
+| Tarjetas / Categorías / Subcategorías | IMPLEMENTADO (PARCIAL) | Ocho tarjetas configuradas y categorías abiertas creadas por el participante. | No se implementó jerarquía de subcategorías. |
+| Pre-test / Post-test | FALTANTE | El sistema integra Card Sorting y SUS, pero no cuestionarios diferenciados pre-test y post-test. | Pendiente de definir con el protocolo de evaluación. |
 | Tabla de estandarización | FALTANTE | No existe. | Pendiente. |
 | Matriz de similitud | FALTANTE | No existe. | Pendiente. |
 | Análisis de Componentes Principales (PCA) | FALTANTE | No existe. | Pendiente. |
@@ -129,7 +129,7 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 |----|--------------|--------|--------------------------|----------------------|
 | RF001 | El paciente puede consultar servicios disponibles | IMPLEMENTADO | `PublicBookingController::create()` carga servicios activos. | `routes/web.php:10`, `app/Http/Controllers/PublicBookingController.php:27-31`, `resources/js/Pages/Booking/Create.jsx:106-129` |
 | RF002 | El paciente selecciona un servicio | IMPLEMENTADO | `chooseService()` en `Create.jsx:32-37`; validación `StorePublicAppointmentRequest`. | `resources/js/Pages/Booking/Create.jsx:32` |
-| RF003 | El paciente selecciona fecha y horario disponible | IMPLEMENTADO | `AppointmentAvailability::slots()` genera slots; `StorePublicAppointmentRequest` valida disponibilidad. | `app/Services/AppointmentAvailability.php:13`, `app/Http/Requests/StorePublicAppointmentRequest.php:40-59` |
+| RF003 | El paciente selecciona odontólogo, fecha y horario disponible | IMPLEMENTADO | La disponibilidad se filtra por odontólogo y horario semanal; `StorePublicAppointmentRequest` valida que el slot siga libre. | `app/Services/AppointmentAvailability.php`, `app/Http/Requests/StorePublicAppointmentRequest.php`, `resources/js/Pages/Booking/Create.jsx` |
 | RF004 | Inicio de sesión del personal | IMPLEMENTADO | `AuthController`, `LoginRequest`, `Login.jsx`, ruta `/login`. | `routes/web.php:19-20`, `app/Http/Controllers/AuthController.php`, `app/Http/Requests/LoginRequest.php` |
 | RF005 | El paciente ingresa sus datos de contacto | IMPLEMENTADO | Formulario paso 3 en `Create.jsx`; validación `name`, `phone`, `email`. | `resources/js/Pages/Booking/Create.jsx:158-178`, `app/Http/Requests/StorePublicAppointmentRequest.php:34-36` |
 | RF006 | El paciente confirma la cita y recibe referencia | IMPLEMENTADO | `PublicBookingController::store()` crea cita y genera referencia `CDT-XXXXXX`. | `app/Http/Controllers/PublicBookingController.php:86-106` |
@@ -140,19 +140,20 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 | RF011 | El admin crea una cita manualmente | IMPLEMENTADO | `AppointmentController::store()` + modal en `Dashboard.jsx`. | `routes/web.php:25`, `app/Http/Controllers/AppointmentController.php:53-67` |
 | RF012 | El admin cambia el estado de una cita | IMPLEMENTADO | `AppointmentController::updateStatus()` + validación de transiciones. | `routes/web.php:26-27`, `app/Http/Requests/UpdateAppointmentStatusRequest.php` |
 | RF013 | El admin gestiona pacientes | IMPLEMENTADO | `PatientController::index()` (listado con búsqueda/paginación) y `PatientController::store()`. | `routes/web.php:29-30`, `app/Http/Controllers/PatientController.php` |
-| RF014 | Gestión de horarios de atención | FALTANTE | Los horarios están hardcodeados en `config/clinic.php`; no hay UI de administración. | `config/clinic.php:7-13` |
+| RF014 | Gestión de horarios de atención | IMPLEMENTADO | CRUD de odontólogos y horarios semanales por día, con validación de intervalos y una interfaz administrativa. | `app/Models/Schedule.php`, `app/Models/Dentist.php`, `app/Http/Controllers/ScheduleController.php`, `resources/js/Pages/Admin/Schedules/Index.jsx` |
 | RF015 | Gestión de servicios (CRUD admin) | IMPLEMENTADO | `ServiceController` (`index`, `store`, `update`, `destroy`), rutas en `routes/web.php:33-36`, validaciones en `StoreServiceRequest`/`UpdateServiceRequest`, UI en `Admin/Services/Index.jsx`. Elimina (soft) servicios con citas asociadas; verificado por `ServiceManagementTest`. | `routes/web.php:33-36`, `app/Http/Controllers/ServiceController.php`, `app/Http/Requests/StoreServiceRequest.php`, `app/Http/Requests/UpdateServiceRequest.php`, `resources/js/Pages/Admin/Services/Index.jsx`, `tests/Feature/ServiceManagementTest.php` |
-| RF016 | Un horario no puede ser reservado por dos pacientes | IMPLEMENTADO (PARCIAL) | `AppointmentAvailability::overlaps()` previene solapamientos en slots disponibles; `StorePublicAppointmentRequest::after()` valida disponibilidad. <br> **Riesgo:** sin bloqueo transaccional (race condition) entre la lectura de slots y la escritura. | `app/Services/AppointmentAvailability.php:57-69`, `app/Http/Requests/StorePublicAppointmentRequest.php:40-59` |
+| RF016 | Un horario no puede ser reservado por dos pacientes | IMPLEMENTADO | Lock compartido por odontólogo/día usando `cache_locks`, transacción, bloqueo pesimista y revalidación de disponibilidad antes de insertar. La creación manual del administrador usa el mismo lock. | `app/Services/AppointmentAvailability.php`, `app/Http/Controllers/PublicBookingController.php`, `app/Http/Controllers/AppointmentController.php` |
 | RF017 | Una cita cancelada libera el horario | IMPLEMENTADO | `PatientPortalController::cancel()` cambia estado a `cancelled`; los slots se recalculan excluyendo citas `cancelled`. | `app/Services/AppointmentAvailability.php:26-27` (filtra `scheduled` y `confirmed`) |
 | RF018 | Servicios restringidos requieren valoración previa | IMPLEMENTADO | `StorePublicAppointmentRequest` valida `requires_assessment = 0`; `Create.jsx` deshabilita y sugiere valoración. | `app/Http/Requests/StorePublicAppointmentRequest.php:31`, `resources/js/Pages/Booking/Create.jsx:34-36`, `app/Http/Controllers/PublicBookingController.php:34-36` |
+| RF019 | El personal administra odontólogos y sus horarios | IMPLEMENTADO | Alta y actualización/activación de dentistas y gestión semanal de horarios desde el panel protegido. | `app/Http/Controllers/ScheduleController.php`, `routes/web.php`, `resources/js/Pages/Admin/Schedules/Index.jsx` |
 
 ### 4.2 Requerimientos No Funcionales
 
 | ID | Requisito | Estado | Implementación | Observaciones |
 |----|-----------|--------|-----------------|---------------|
 | RNF01 | Usabilidad: flujo principal sin asistencia | IMPLEMENTADO | Flujo de 4 pasos en `Create.jsx`; resumen antes de enviar. | Verificado en `docs/...md` §9.3. |
-| RNF02 | Accesibilidad: contraste, tamaño texto, teclado, foco, labels, errores, color | IMPLEMENTADO (PARCIAL) | `aria-*`, `focus-visible`, `role`, navegación por teclado, inputs 16px. | Pendiente auditoría formal (`docs/...md` §9.4). |
-| RNF03 | Responsive: escritorio, tablet, móvil | IMPLEMENTADO (PARCIAL) | Tailwind grid responsive, `min-w-[320px]`, breakpoints `sm:`. | Pendiente verificación en 320/375/768/1280px con `scrollWidth`. |
+| RNF02 | Accesibilidad: contraste, tamaño texto, teclado, foco, labels, errores, color | IMPLEMENTADO (PARCIAL) | axe-core en CI para reserva, Card Sorting y SUS; verifica reglas WCAG 2.0/2.1 A/AA en tema claro/oscuro, labels y foco visible. | La auditoría de contraste automatizada no reemplaza una evaluación humana o con lector de pantalla. |
+| RNF03 | Responsive: escritorio, tablet, móvil | IMPLEMENTADO | Playwright comprueba `documentElement.scrollWidth` y `body.scrollWidth` a 320, 375, 768 y 1280 px para reserva, Card Sorting y SUS. | Falta comprobar dispositivos físicos y las vistas administrativas con sesión autenticada. |
 | RNF04 | Consistencia de componentes y patrones | IMPLEMENTADO | Componentes compartidos, misma paleta de colores, modo claro/oscuro persistente. | — |
 | RNF05 | Retroalimentación: "Guardando..." → "✓ Confirmada" / "✕ Error" | IMPLEMENTADO | `form.processing` muestra "Enviando…", flash `success`/`error`, estados de cita. | `app/Http/Middleware/HandleInertiaRequests.php:40-43` |
 
@@ -160,14 +161,14 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 
 | ID | Regla | Estado | Implementación |
 |----|-------|--------|-----------------|
-| RB01 | Un horario no puede ser reservado por dos pacientes simultáneamente | IMPLEMENTADO (PARCIAL) | `AppointmentAvailability::overlaps()` + `StorePublicAppointmentRequest::after()` | Riesgo de race condition (documentado como hallazgo heurístico severidad 2 en `docs/...md`). |
+| RB01 | Un horario no puede ser reservado por dos pacientes simultáneamente | IMPLEMENTADO | Lock compartido por odontólogo/día, transacción, `lockForUpdate()` y verificación de solapamientos justo antes de guardar. |
 | RB02 | Una cita cancelada libera el horario | IMPLEMENTADO | `Appointment::STATUSES`, filtro en `slots()` excluye `cancelled`. |
 | RB03 | La duración del servicio determina los bloques de disponibilidad | IMPLEMENTADO | `AppointmentAvailability::slots()` usa `duration_minutes + buffer_minutes`. |
 | RB04 | Anticipación mínima de 24h para reservar | IMPLEMENTADO | `config(clinic.minimum_advance_hours)` = 24; `AppointmentAvailability::slots()` filtra `now()->addHours(24)`. |
 | RB05 | Cancelación permitida hasta 24h antes | IMPLEMENTADO | `PatientPortalController::cancel()` verifica `$appointment->starts_at > now()->addHours(24)`. |
 | RB06 | Cancelación tardía: contactar al consultorio | IMPLEMENTADO | Mensaje de error en `PatientPortalController::cancel()`. |
-| RB07 | Inasistencia: registrada como estado de cita | IMPLEMENTADO (PARCIAL) | Estados: `scheduled`, `confirmed`, `completed`, `cancelled`. Falta estado explícito de "no-show". |
-| RB08 | Transiciones de estado: scheduled→confirmed→completed; cancelable desde scheduled/confirmed | IMPLEMENTADO | `UpdateAppointmentStatusRequest::after()` define transiciones permitidas. |
+| RB07 | Inasistencia: registrada como estado de cita | IMPLEMENTADO | Estado `no_show`, opción administrativa y transiciones desde citas programadas/confirmadas. |
+| RB08 | Transiciones de estado: scheduled→confirmed→completed; cancelable desde scheduled/confirmed | IMPLEMENTADO | `UpdateAppointmentStatusRequest::after()` define también `no_show` como estado terminal. |
 
 ### 4.4 Escenarios / Casos de uso (identificados por tarea)
 
@@ -212,7 +213,7 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 |------|--------|---------|---------------|
 | Resultados de evaluación | FALTANTE | No hay datos reales de evaluación. | `docs/...md` §13: "no se han realizado sesiones con participantes". |
 | Diseño final (web) | IMPLEMENTADO (PARCIAL) | UI funcional con tema claro/oscuro. | No hay comparativa antes/después. |
-| Diseño final (móvil) | IMPLEMENTADO (PARCIAL) | Responsive con Tailwind. | No validado en dispositivo real. |
+| Diseño final (móvil) | IMPLEMENTADO (PARCIAL) | Responsive con Tailwind y verificaciones Playwright en anchos 320/375/768/1280 para flujos públicos. | No validado en dispositivo real; falta revisar paneles administrativos con sesión autenticada. |
 | Capturas antes/después | FALTANTE | No hay capturas. | **Falta agregar.** |
 
 ---
@@ -221,8 +222,8 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 
 | Ítem | Estado | Sistema | Observaciones |
 |------|--------|---------|---------------|
-| Descripción de la prueba | FALTANTE | No implementado. | **Falta implementar.** |
-| Tipo de CardSorting | FALTANTE | No definido. | **Falta definir.** |
+| Descripción de la prueba | IMPLEMENTADO | Herramienta web anónima de Card Sorting abierto, con categorías nombradas por participantes. | Falta aplicar y describir la sesión real. |
+| Tipo de CardSorting | IMPLEMENTADO | Abierto, con organización de tarjetas en categorías creadas por el participante. | La elección del tipo se debe justificar en el informe académico. |
 | Resultados con participantes | FALTANTE | No hay datos. | **Falta recolectar.** |
 | Tabla de estandarización | FALTANTE | No existe. | **Falta crear.** |
 | Matriz de similitud | FALTANTE | No existe. | **Falta crear.** |
@@ -237,7 +238,7 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 | Descripción de la prueba | IMPLEMENTADO | `docs/...md` §9.1: 10 heurísticas de Nielsen con tabla de inspección. | Documentada internamente (11 oct 2026). |
 | Resultados | IMPLEMENTADO (PARCIAL) | Tabla de inspección con 10 hallazgos. | No es evaluación con usuarios. |
 | Pantalla con cambios relevantes | IMPLEMENTADO (PARCIAL) | Iteraciones I01-I04 documentadas en `docs/...md` §10. | No hay imágenes before/after. |
-| SUS (cuestionario) | FALTANTE | No aplicado. `docs/...md` §9.3: "pendiente de aplicación". | **Falta implementar y aplicar.** |
+| SUS (cuestionario) | IMPLEMENTADO (PENDIENTE DE APLICACIÓN) | Formulario anónimo de 10 preguntas, persistencia y cálculo de puntaje SUS 0–100 con redacción adaptada al prototipo. | Falta validar la redacción frente a una versión española validada antes de recolectar respuestas reales. |
 
 ---
 
@@ -262,7 +263,7 @@ A continuación se listan los **RF identificados** del documento y su estado en 
 
 | Ítem | Estado | Observaciones |
 |------|--------|---------------|
-| Cuestionario SUS | FALTANTE | **Falta agregar.** |
+| Cuestionario SUS | IMPLEMENTADO EN LA APLICACIÓN | Disponible en `/evaluacion/sus`, con respuestas anónimas. | Falta agregar al informe los resultados reales y su análisis. |
 | Tareas de prueba | FALTANTE | **Falta agregar.** |
 | Tablas completas | IMPLEMENTADO (PARCIAL) | En `docs/...md`. |
 | Wireframes | FALTANTE | **Falta agregar.** |
@@ -285,10 +286,10 @@ A continuación se listan todas las funcionalidades que **no existen** o están 
 | # | Funcionalidad | Descripción | Prioridad | Archivos afectados |
 |---|--------------|-------------|-----------|---------------------|
 | 1 | **CRUD de servicios (admin)** | Rutas y controlador para crear, listar, editar, activar/desactivar y eliminar servicios. | Alta | Implementado: `routes/web.php:33-36`, `app/Http/Controllers/ServiceController.php`, `app/Http/Requests/StoreServiceRequest.php`, `app/Http/Requests/UpdateServiceRequest.php`, `resources/js/Pages/Admin/Services/Index.jsx`, `tests/Feature/ServiceManagementTest.php` |
-| 2 | **Gestión de horarios (admin)** | Modelo `Schedule` y UI para definir días/hora de atención por dentista. | Alta | Nueva migration, `app/Models/Schedule.php`, controlador, vista |
-| 3 | **Estado "no-show" (ausencia)** | Añadir estado `no_show` a `Appointment::STATUSES` y transición correspondiente. | Media | `app/Models/Appointment.php`, `app/Http/Requests/UpdateAppointmentStatusRequest.php` |
-| 4 | **Bloqueo transaccional de reservas simultáneas** | Usar `DB::transaction()` con lock optimista/pesimista en `PublicBookingController::store()` para prevenir race condition en doble reserva. | Alta | `app/Http/Controllers/PublicBookingController.php` |
-| 5 | **Gestión de dentistas/usuarios** | Posibilidad de registrar múltiples odontólogos con horarios asignados. | Media | `app/Models/User.php`, migraciones |
+| 2 | **Gestión de horarios (admin)** | IMPLEMENTADO: modelo `Schedule`, migración, controlador y UI para administrar días/horas por odontólogo. | Alta | `app/Models/Schedule.php`, `app/Http/Controllers/ScheduleController.php`, `resources/js/Pages/Admin/Schedules/Index.jsx` |
+| 3 | **Estado "no-show" (ausencia)** | IMPLEMENTADO: estado `no_show`, transición administrativa y estado terminal. | Media | `app/Models/Appointment.php`, `app/Http/Requests/UpdateAppointmentStatusRequest.php`, `resources/js/Pages/Dashboard.jsx` |
+| 4 | **Bloqueo transaccional de reservas simultáneas** | IMPLEMENTADO: lock compartido en `cache_locks`, transacción, bloqueos pesimistas y revalidación para reserva pública y alta manual. | Alta | `app/Services/AppointmentAvailability.php`, `app/Http/Controllers/PublicBookingController.php`, `app/Http/Controllers/AppointmentController.php` |
+| 5 | **Gestión de dentistas** | IMPLEMENTADO: alta, edición/activación, horarios y selección de odontólogo en reserva pública. | Media | `app/Models/Dentist.php`, migraciones, `app/Http/Controllers/ScheduleController.php` |
 
 ### Frontend — Funcionalidades faltantes
 
@@ -304,11 +305,11 @@ A continuación se listan todas las funcionalidades que **no existen** o están 
 
 | # | Funcionalidad | Descripción | Prioridad |
 |---|--------------|-------------|-----------|
-| 11 | **CardSorting** | Configuración, ejecución y análisis con herramienta (OptimalWorkshop/UXWeak). | Alta |
-| 12 | **Cuestionario SUS** | Implementación e integración del cuestionario SUS post-tarea. | Alta |
-| 13 | **Tests de tareas con participantes** | Infraestructura para registrar: tiempo, errores, ayudas, éxito. | Alta |
-| 14 | **Auditoría de accesibilidad formal** | Verificación con lector de pantalla, contraste medido, navegación teclado. | Alta |
-| 15 | **Pruebas responsive automatizadas** | Verificación en 320/375/768/1280px con `scrollWidth` y objetos de foco. | Media |
+| 11 | **CardSorting** | IMPLEMENTADO: herramienta abierta con persistencia. Sigue pendiente aplicarla con participantes y analizar resultados (estandarización, similitud, PCA). | Alta |
+| 12 | **Cuestionario SUS** | IMPLEMENTADO: formulario anónimo de 10 preguntas y cálculo de puntuación. Sigue pendiente aplicarlo con participantes. | Alta |
+| 13 | **Tests de tareas con participantes** | FALTANTE: no se registra tiempo, errores, ayudas ni éxito de tareas. | Alta |
+| 14 | **Auditoría de accesibilidad formal** | IMPLEMENTADO (PARCIAL): axe-core en CI para páginas públicas, contraste WCAG y foco. Sigue pendiente evaluación humana y lector de pantalla. | Alta |
+| 15 | **Pruebas responsive automatizadas** | IMPLEMENTADO: Playwright mide `scrollWidth` en 320/375/768/1280px para reserva, Card Sorting y SUS. | Media |
 | 16 | **PCA (Análisis de Componentes Principales)** | Análisis estadístico de resultados CardSorting. | Media |
 
 ### Documentación — Funcionalidades faltantes
@@ -346,26 +347,30 @@ A continuación se mapean los tests PHPUnit existentes contra los requisitos fun
 | `test_appointment_is_rejected_when_the_dentist_has_an_overlap` | `tests/Feature/AppointmentWorkflowTest.php:87` | RF016, RB01 |
 | `test_scheduled_appointment_can_be_confirmed` | `tests/Feature/AppointmentWorkflowTest.php:110` | RF012, RB08 |
 | `test_completed_appointment_cannot_be_reopened` | `tests/Feature/AppointmentWorkflowTest.php:126` | RF012, RB08 |
+| `test_confirmed_appointment_can_be_marked_as_no_show` | `tests/Feature/AppointmentWorkflowTest.php` | RB07, RB08 |
+| `test_public_booking_availability_is_separated_by_dentist` | `tests/Feature/PublicBookingTest.php` | RF003, RF014 |
+| `test_administrator_can_add_a_dentist_and_set_weekly_hours` | `tests/Feature/ScheduleManagementTest.php` | RF014 |
+| Card Sorting and SUS submission tests | `tests/Feature/EvaluationTest.php` | Evaluations |
+| Responsive `scrollWidth` and axe WCAG checks | `tests/e2e/accessibility.spec.js` | RNF02, RNF03 |
 | `test_guest_is_redirected_to_login_from_admin_routes` | `tests/Feature/AdminAuthorizationTest.php:14` | RF004 (seguridad) |
 | `test_authenticated_non_administrator_is_forbidden_from_admin_panel` | `tests/Feature/AdminAuthorizationTest.php:20` | RF004 (seguridad) |
 | `test_administrator_can_open_panel_after_login` | `tests/Feature/AdminAuthorizationTest.php:27` | RF004 |
 | `test_non_administrator_cannot_sign_in_to_admin_panel` | `tests/Feature/AdminAuthorizationTest.php:42` | RF004 (seguridad) |
 | `test_authenticated_administrator_visiting_login_is_redirected_to_panel` | `tests/Feature/AdminAuthorizationTest.php:54` | RF004 |
 
-**Resumen de tests:** 23 tests, 158 aserciones (según `docs/...md` §12.1).
+**Estado de verificación de esta implementación:** pruebas PHPUnit y Playwright añadidas/actualizadas, pero pendientes de ejecución en el runtime PHP 8.5 del proyecto. El conteo histórico anterior no refleja la cobertura actual.
 
 ---
 
 ## 13. Conclusión del análisis de trazabilidad
 
-El sistema `citas-dentales` implementa el **núcleo funcional** del flujo de reserva de citas dentales y la gestión administrativa básica. Las funcionalidades clave — reserva pública con verificación de disponibilidad, portal privado con cancelación, login de administrador y gestión de la agenda — están **completamente implementadas y cubiertas por tests automatizados**.
+El sistema `citas-dentales` implementa el flujo público de reserva, portal privado y gestión administrativa de servicios, pacientes y agenda. Esta actualización añade horarios por odontólogo, elección de dentista, estado de inasistencia, control de reservas concurrentes, herramientas de Card Sorting y SUS, y verificaciones automatizadas de responsive/accesibilidad.
 
 Sin embargo, para cumplir con el formato completo exigido por `Doc. Final UID.docx`, faltan:
 
-1. **Gestión de horarios** (RF014) — falta modelo `Schedule` y UI de administración; los horarios están hardcodeados en `config/clinic.php`.
-2. **Bloqueo transaccional** (RF016/RB01) — riesgo de doble reserva simultánea documentado y pendiente.
-3. **Metodología de evaluación con usuarios** — CardSorting, SUS, pruebas de tareas y auditoría de accesibilidad no se han ejecutado.
-4. **Documentación de apoyo** — wireframes, diagramas ER, capturas, video demo, referencias APA y conclusiones.
-5. **Estado "no-show"** (RB07) — parcialmente soportado por el enum de estados pero sin transición o UI explícita.
+1. **Pendiente de ejecución en el entorno correcto:** correr PHPUnit y Playwright desde el entorno PHP 8.5/Node del proyecto; no se ejecutaron en la máquina global PHP 8.2.
+2. **Evaluación con usuarios:** recolectar respuestas reales de Card Sorting y SUS, ejecutar evaluación heurística y realizar pruebas de tareas. La integración técnica no sustituye estas actividades.
+3. **Análisis académico:** elaborar tabla de estandarización, matriz de similitud y PCA con los resultados recolectados.
+4. **Documentación de apoyo:** wireframes, diagramas ER, capturas, video demo, referencias APA y conclusiones basadas en los resultados.
 
-> **Nota sobre la base de datos:** `.env.example` configura `DB_CONNECTION=sqlite` por defecto, aunque el documento original especifica MySQL. El sistema funciona con ambos, pero los tests usan SQLite en memoria (`RefreshDatabase`).
+> **Nota sobre la concurrencia:** las reservas usan el lock compartido de la tabla `cache_locks` antes de abrir la transacción, además de `lockForUpdate()` donde el motor lo admite. Esto permite serializar reservas en SQLite y MySQL mientras las instancias comparten la misma base de datos.
