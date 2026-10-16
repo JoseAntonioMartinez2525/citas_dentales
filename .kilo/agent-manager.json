@@ -1,0 +1,248 @@
+{
+  "worktrees": {
+    "wt-1778002623660-1": {
+      "branch": "secretive-gibbon",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\secretive-gibbon",
+      "parentBranch": "main",
+      "createdAt": "2026-05-05T17:37:03.660Z",
+      "remote": "origin"
+    },
+    "wt-1778262328007-1": {
+      "branch": "sustaining-diagnostic",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\sustaining-diagnostic",
+      "parentBranch": "main",
+      "createdAt": "2026-05-08T17:45:28.007Z",
+      "remote": "origin"
+    },
+    "wt-1779301023270-1": {
+      "branch": "pyrite-lentil",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\pyrite-lentil",
+      "parentBranch": "main",
+      "createdAt": "2026-05-20T18:17:03.270Z",
+      "remote": "origin"
+    },
+    "wt-1779302929646-2": {
+      "branch": "sun-joke",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\sun-joke",
+      "parentBranch": "main",
+      "createdAt": "2026-05-20T18:48:49.646Z",
+      "remote": "origin"
+    },
+    "wt-1779383640021-1": {
+      "branch": "enshrined-stay",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\enshrined-stay",
+      "parentBranch": "main",
+      "createdAt": "2026-05-21T17:14:00.021Z",
+      "remote": "origin"
+    },
+    "wt-1779816266530-1": {
+      "branch": "recent-archaeopteryx",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\recent-archaeopteryx",
+      "parentBranch": "main",
+      "createdAt": "2026-05-26T17:24:26.530Z",
+      "remote": "origin"
+    },
+    "wt-1780593360503-1": {
+      "branch": "splashy-harpymimus",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\splashy-harpymimus",
+      "parentBranch": "main",
+      "createdAt": "2026-06-04T17:16:00.503Z",
+      "remote": "origin"
+    },
+    "wt-1780593454786-2": {
+      "branch": "abounding-grill",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\abounding-grill",
+      "parentBranch": "main",
+      "createdAt": "2026-06-04T17:17:34.786Z",
+      "remote": "origin"
+    },
+    "wt-1780595301226-3": {
+      "branch": "six-plaster",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\six-plaster",
+      "parentBranch": "main",
+      "createdAt": "2026-06-04T17:48:21.226Z",
+      "remote": "origin"
+    },
+    "wt-1780681788401-1": {
+      "branch": "swamp-share",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\swamp-share",
+      "parentBranch": "main",
+      "createdAt": "2026-06-05T17:49:48.401Z",
+      "remote": "origin"
+    },
+    "wt-1780681907874-1": {
+      "branch": "simple-guava",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\simple-guava",
+      "parentBranch": "main",
+      "createdAt": "2026-06-05T17:51:47.874Z",
+      "remote": "origin"
+    },
+    "wt-1781796561078-1": {
+      "branch": "judicious-suit",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\judicious-suit",
+      "parentBranch": "main",
+      "createdAt": "2026-06-18T15:29:21.078Z",
+      "remote": "origin",
+      "label": "checkist logic"
+    },
+    "wt-1782153627463-1": {
+      "branch": "nine-furniture",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\nine-furniture",
+      "parentBranch": "main",
+      "createdAt": "2026-06-22T18:40:27.463Z",
+      "remote": "origin"
+    },
+    "wt-1782230006016-1": {
+      "branch": "butternut-traveler",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\butternut-traveler",
+      "parentBranch": "main",
+      "createdAt": "2026-06-23T15:53:26.016Z",
+      "remote": "origin"
+    },
+    "wt-1782330641956-1": {
+      "branch": "different-harpymimus",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\different-harpymimus",
+      "parentBranch": "main",
+      "createdAt": "2026-06-24T19:50:41.956Z",
+      "remote": "origin"
+    },
+    "wt-1782488084369-1": {
+      "branch": "gainful-failing",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\gainful-failing",
+      "parentBranch": "main",
+      "createdAt": "2026-06-26T15:34:44.369Z",
+      "remote": "origin"
+    },
+    "wt-1783019997806-1": {
+      "branch": "charming-page",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\charming-page",
+      "parentBranch": "main",
+      "createdAt": "2026-07-02T19:19:57.806Z",
+      "remote": "origin"
+    },
+    "wt-1790193521752-1": {
+      "branch": "prism-pin",
+      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\prism-pin",
+      "parentBranch": "details",
+      "createdAt": "2026-09-23T19:58:41.752Z",
+      "remote": "origin",
+      "branchOwned": true
+    }
+  },
+  "sessions": {
+    "ses_206c8e240ffeSgCuMN2FCqJ7Yn": {
+      "worktreeId": "wt-1778002623660-1",
+      "createdAt": "2026-05-05T17:37:12.833Z"
+    },
+    "ses_1b964e5e6ffeS9m7LPGrvUWtp4": {
+      "worktreeId": "wt-1779301023270-1",
+      "createdAt": "2026-05-20T18:17:12.248Z"
+    },
+    "ses_1b947c1cdffewuEYxImZryXG5E": {
+      "worktreeId": "wt-1779302929646-2",
+      "createdAt": "2026-05-20T18:49:02.776Z"
+    },
+    "ses_1b4785142ffelUhObTKbsGj9OO": {
+      "worktreeId": "wt-1779383640021-1",
+      "createdAt": "2026-05-21T17:14:05.181Z"
+    },
+    "ses_19aaef014ffe6JkZrWdYElU72E": {
+      "worktreeId": "wt-1779816266530-1",
+      "createdAt": "2026-05-26T17:24:32.585Z"
+    },
+    "ses_16c5d7958ffeNajFNhvZFbi4f3": {
+      "worktreeId": "wt-1780593360503-1",
+      "createdAt": "2026-06-04T17:16:05.796Z"
+    },
+    "ses_16c5d180bffenWI0PeEhGFvnMa": {
+      "worktreeId": null,
+      "createdAt": "2026-06-04T17:16:27.572Z"
+    },
+    "ses_16c5bec28ffeDTTlvPps61PDZJ": {
+      "worktreeId": "wt-1780593454786-2",
+      "createdAt": "2026-06-04T17:17:44.736Z"
+    },
+    "ses_16c3fd07cffex6k9PUKgkdPef1": {
+      "worktreeId": "wt-1780595301226-3",
+      "createdAt": "2026-06-04T17:48:26.447Z"
+    },
+    "ses_167182b90ffe1CojSZ3ZFi3Jyz": {
+      "worktreeId": "wt-1780681788401-1",
+      "createdAt": "2026-06-05T17:49:53.208Z"
+    },
+    "ses_167163ba6ffeufPag2Frl0ndPB": {
+      "worktreeId": "wt-1780681907874-1",
+      "createdAt": "2026-06-05T17:51:58.033Z"
+    },
+    "ses_124a60a5dffesgbgEH45OiYGLt": {
+      "worktreeId": "wt-1781796561078-1",
+      "createdAt": "2026-06-18T15:29:26.618Z"
+    },
+    "ses_124ac45c9ffePfOny8ja9UkQhJ": {
+      "worktreeId": "wt-1781796561078-1",
+      "createdAt": "2026-06-18T15:30:32.066Z"
+    },
+    "ses_10f5d9ae2ffe5Jk0A8uEBe6sjh": {
+      "worktreeId": "wt-1782153627463-1",
+      "createdAt": "2026-06-22T18:40:35.122Z"
+    },
+    "ses_10f2f3691ffeyDU2A8kCAP1oFY": {
+      "worktreeId": "wt-1782153627463-1",
+      "createdAt": "2026-06-22T19:31:15.447Z"
+    },
+    "ses_10ad02134ffeKUXrPeqNmz0yE9": {
+      "worktreeId": "wt-1782230006016-1",
+      "createdAt": "2026-06-23T15:53:35.707Z"
+    },
+    "ses_104d08dddffeqU86AeIinX5KR4": {
+      "worktreeId": "wt-1782330641956-1",
+      "createdAt": "2026-06-24T19:50:51.188Z"
+    },
+    "ses_0fb6e4133ffe6n1QJVhokDXjoq": {
+      "worktreeId": "wt-1782488084369-1",
+      "createdAt": "2026-06-26T15:34:50.621Z"
+    },
+    "ses_0dbb9d2e2ffeOn5Q4jYfGtsy0Z": {
+      "worktreeId": "wt-1783019997806-1",
+      "createdAt": "2026-07-02T19:20:08.038Z"
+    },
+    "ses_f30269fdeffeCcO2h0HEr8GuVC": {
+      "worktreeId": "wt-1790193521752-1",
+      "createdAt": "2026-09-23T19:58:50.992Z"
+    }
+  },
+  "tabOrder": {
+    "local": [
+      "pending:ce8f0ec0-0e04-41a3-ad1b-c450e42ece49"
+    ],
+    "wt-1781796561078-1": [
+      "ses_124a60a5dffesgbgEH45OiYGLt",
+      "ses_124ac45c9ffePfOny8ja9UkQhJ"
+    ],
+    "wt-1782153627463-1": [
+      "ses_10f5d9ae2ffe5Jk0A8uEBe6sjh",
+      "ses_10f2f3691ffeyDU2A8kCAP1oFY"
+    ]
+  },
+  "worktreeOrder": [
+    "wt-1778002623660-1",
+    "wt-1778262328007-1",
+    "wt-1779301023270-1",
+    "wt-1779302929646-2",
+    "wt-1779383640021-1",
+    "wt-1779816266530-1",
+    "wt-1780593360503-1",
+    "wt-1780593454786-2",
+    "wt-1780595301226-3",
+    "wt-1780681788401-1",
+    "wt-1780681907874-1",
+    "wt-1781796561078-1",
+    "wt-1782153627463-1",
+    "wt-1782230006016-1",
+    "wt-1782330641956-1",
+    "wt-1782488084369-1",
+    "wt-1783019997806-1",
+    "wt-1790193521752-1"
+  ],
+  "sessionsCollapsed": false
+}

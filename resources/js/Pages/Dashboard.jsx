@@ -45,7 +45,7 @@ function shiftDate(date, amount) {
     return [shiftedDate.getFullYear(), String(shiftedDate.getMonth() + 1).padStart(2, '0'), String(shiftedDate.getDate()).padStart(2, '0')].join('-');
 }
 
-export default function Dashboard({ date, appointments, patients, dentists, stats, flash = {} }) {
+export default function Dashboard({ date, appointments, patients, dentists, stats, selectedDentistId, flash = {} }) {
     const [search, setSearch] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const form = useForm({
@@ -73,7 +73,11 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
     }, [appointments, search]);
 
     function navigateToDate(nextDate) {
-        router.get('/', { date: nextDate }, { preserveState: true, preserveScroll: true });
+        router.get('/', { date: nextDate, dentist_id: selectedDentistId }, { preserveState: true, preserveScroll: true });
+    }
+
+    function filterDentist(dentistId) {
+        router.get('/', { date, dentist_id: dentistId || null }, { preserveState: true, preserveScroll: true });
     }
 
     function submitAppointment(event) {
@@ -171,6 +175,19 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
                             <input type="date" value={date} onChange={(event) => navigateToDate(event.target.value)} aria-label="Seleccionar día" className="h-10 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm text-[#39473f] dark:border-[#3a4a55] dark:bg-[#1c2730] dark:text-[#e5edf2]" />
                             <button type="button" onClick={() => navigateToDate(shiftDate(date, 1))} aria-label="Día siguiente" className="flex size-10 items-center justify-center rounded-lg border border-[#dfe4de] bg-white text-[#536159] hover:bg-[#f7f9f6] dark:border-[#3a4a55] dark:bg-[#1c2730] dark:text-[#c0cbd3] dark:hover:bg-[#263640]"><ChevronRight size={18} /></button>
                         </div>
+                        <label className="grid gap-1.5 text-sm font-medium">
+                            Odontólogo
+                            <select
+                                value={selectedDentistId ?? ''}
+                                onChange={(event) => filterDentist(event.target.value ? Number(event.target.value) : null)}
+                                className="h-11 w-full min-w-48 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]"
+                            >
+                                <option value="">Todos los odontólogos</option>
+                                {dentists.map((dentist) => (
+                                    <option key={dentist.id} value={dentist.id}>{dentist.name}</option>
+                                ))}
+                            </select>
+                        </label>
                     </section>
 
                     {flash.success && <div role="status" className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{flash.success}</div>}

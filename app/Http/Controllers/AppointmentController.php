@@ -21,17 +21,20 @@ class AppointmentController extends Controller
     {
         $validated = $request->validate([
             'date' => ['nullable', 'date_format:Y-m-d'],
+            'dentist_id' => ['nullable', 'integer', 'exists:dentists,id'],
         ]);
         $date = $validated['date'] ?? today()->toDateString();
 
         $appointments = Appointment::query()
             ->with('patient:id,name,phone')
+            ->when(isset($validated['dentist_id']), fn ($query) => $query->where('dentist_id', $validated['dentist_id']))
             ->whereDate('starts_at', $date)
             ->orderBy('starts_at')
             ->get();
 
         return Inertia::render('Dashboard', [
             'date' => $date,
+            'selectedDentistId' => isset($validated['dentist_id']) ? (int) $validated['dentist_id'] : null,
             'appointments' => $appointments->map(fn (Appointment $appointment): array => [
                 'id' => $appointment->id,
                 'patient' => $appointment->patient->only(['id', 'name', 'phone']),
