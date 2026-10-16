@@ -140,10 +140,20 @@ export default function CardSorting({ cards, submitted }) {
                                     );
                                 })}
                             </div>
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <button type="button" onClick={addGroup} className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#dfe4de] px-4 text-sm font-medium dark:border-[#3a4a55]">
-                                    <Plus size={16} /> Agregar categoría
-                                </button>
+                             <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button type="button" onClick={addGroup} className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#dfe4de] px-4 text-sm font-medium dark:border-[#3a4a55]">
+                                        <Plus size={16} /> Agregar categoría
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAssignments({})}
+                                        disabled={Object.keys(assignments).length === 0}
+                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#dfe4de] px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a4a55]"
+                                    >
+                                        Limpiar todo
+                                    </button>
+                                </div>
                                 <div className="text-right">
                                     {form.errors.groups && <p role="alert" className="mb-2 text-sm text-rose-700 dark:text-rose-300">{form.errors.groups}</p>}
                                     <button type="submit" disabled={form.processing || unassignedCards.length > 0} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#416984] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#527e9d]">

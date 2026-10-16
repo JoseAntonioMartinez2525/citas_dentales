@@ -175,12 +175,13 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
 
                     {flash.success && <div role="status" className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{flash.success}</div>}
 
-                    <section className="mb-7 grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Resumen de citas">
+                    <section className="mb-7 grid grid-cols-2 gap-3 xl:grid-cols-5" aria-label="Resumen de citas">
                         {[
                             ['Citas del día', stats.total, 'Todas las reservas'],
                             ['Pendientes', stats.scheduled, 'Por confirmar'],
                             ['Confirmadas', stats.confirmed, 'Listas para atender'],
                             ['Completadas', stats.completed, 'Atenciones finalizadas'],
+                            ['No asistió', stats.no_show, 'Citas sin presentación'],
                         ].map(([label, value, detail]) => (
                             <div key={label} className="rounded-xl border border-[#e2e6e0] bg-white px-4 py-4 dark:border-[#344550] dark:bg-[#1c2730] sm:px-5">
                                 <p className="text-sm text-[#728078] dark:text-[#a0afb9]">{label}</p>
