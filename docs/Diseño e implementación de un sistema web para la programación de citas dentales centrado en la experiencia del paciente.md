@@ -4,6 +4,8 @@
 
 Consultorio dental particular.
 
+> Vea también: [Especificación funcional detallada](Especificacion-funcional-detallada.md) — describe pasos algorítmicos, tipos de datos y diagramas de flujo para cada funcionalidad implementada.
+
 ### **Producto**
 
 **Revisión preliminar de implementación, 11 de octubre de 2026.** La hizo el equipo de desarrollo mediante inspección de la interfaz, rutas, validaciones y navegación del navegador. No es una evaluación independiente ni una prueba con pacientes. Severidad: 0 = no es problema; 1 = cosmético; 2 = menor; 3 = importante; 4 = crítico.
@@ -14,7 +16,7 @@ Consultorio dental particular.
 | Relación entre sistema y mundo real           | La interfaz usa nombres, fechas y horas comprensibles y presenta la duración.                                              |         1 | Los servicios y horarios siguen siendo supuestos ficticios que deben confirmarse.                        |
 | Control y libertad del usuario                | Hay acciones para volver de paso y cambiar fecha; el paciente puede cancelar con anticipación y revocar el enlace privado. |         2 | Comprobar si el diálogo de confirmación de cancelación es suficientemente claro y accesible con teclado. |
 | Consistencia y estándares                     | Botones, campos, colores de estado y navegación mantienen patrones comunes; el tema claro/oscuro es persistente.           |         1 | Revisar consistencia en pantallas pequeñas y en ambos temas.                                             |
-| Prevención de errores                         | Se ocultan horarios ocupados, se valida en servidor y una restauración requiere valoración.                                |         2 | Sigue pendiente resolver de forma transaccional dos reservas simultáneas del mismo horario.              |
+| Prevención de errores                         | Se ocultan horarios ocupados, se valida en servidor y una restauración requiere valoración. Además, las reservas simultáneas se serializan mediante lock distribuido y bloqueo pesimista. |         2 | Resuelto con `AppointmentAvailability::withDentistScheduleLock()` + `lockForUpdate()`. Ver [Especificación funcional detallada](Especificacion-funcional-detallada.md) §2.1. |
 | Reconocimiento antes que recuerdo             | El resumen repite servicio, fecha, hora, nombre y teléfono antes de confirmar.                                             |         1 | Mantener el resumen como último paso antes de enviar.                                                    |
 | Flexibilidad y eficiencia                     | La persona puede volver a servicio, fecha y horario antes de enviar.                                                       |         2 | Medir tiempo y cantidad de retrocesos durante las tareas con usuarios.                                   |
 | Diseño estético y minimalista                 | La reserva presenta una decisión principal por paso y no solicita información clínica.                                     |         1 | Mantener el alcance de datos mínimos del prototipo.                                                      |
@@ -162,6 +164,8 @@ El producto es una GUI web responsive. Debe ocultar la complejidad de la agenda 
 
 Los perfiles de paciente y personal son perfiles de diseño derivados del alcance, no resultados de entrevistas ni una muestra estadística. Aún se debe entrevistar u observar al consultorio para documentar su flujo actual, frecuencia, interrupciones, problemas, información y terminología. La reserva pública implementa una tarea futura propuesta; no representa un proceso actual verificado.
 
+Adicionalmente, el sistema incluye herramientas integradas para recolección de datos de evaluación: Card Sorting (`/evaluacion/card-sorting`) y SUS (`/evaluacion/sus`), accesibles públicamente durante las sesiones con participantes. Los resultados se visualizan en el panel de administración (`/admin/evaluaciones`).
+
 ### **Especificaciones preliminares de usabilidad**
 
 Son metas de diseño para validar, no resultados observados:
@@ -183,6 +187,26 @@ Consultar, modificar y cancelar.
 
 Información mínima necesaria para gestionar las citas.
 
+### **F11 — Gestionar servicios (admin)**
+
+Crear, editar, activar/desactivar y eliminar servicios. Un servicio con citas no se puede eliminar, solo desactivar. Ver [especificación detallada](Especificacion-funcional-detallada.md) §2.6.
+
+### **F12 — Gestionar odontólogos y horarios (admin)**
+
+Registrar odontólogos activos e definir horarios semanales por día. La reserva pública filtra por odontólogo seleccionado. Ver [especificación detallada](Especificacion-funcional-detallada.md) §2.7.
+
+### **F13 — Estado de inasistencia (admin)**
+
+Marcar una cita como "no asistió" desde `scheduled` o `confirmed`. Estado terminal: no se puede reabrir. Ver [especificación detallada](Especificacion-funcional-detallada.md) §2.4.
+
+### **F14 — Herramienta Card Sorting**
+
+Clasificación anónima de 8 tarjetas de funcionalidades en categorias definidas por el participante. Persiste en base de datos y muestra resultados en admin. Ver [especificación detallada](Especificacion-funcional-detallada.md) §2.8.
+
+### **F15 — Cuestionario SUS**
+
+Formulario de 10 preguntas con cálculo automático de puntuación (0-100). Anónimo. Ver [especificación detallada](Especificacion-funcional-detallada.md) §2.9.
+
 # **Requisitos no funcionales**
 
 Aquí empieza a entrar directamente Diseño de Interfaces.
@@ -203,6 +227,8 @@ La interfaz deberá considerar:
 - mensajes de error comprensibles;
 - información no dependiente únicamente del color.
 
+**Verificación automatizada implementada:** Playwright + `@axe-core/playwright` valida WCAG 2.0/2.1 A y AA en páginas de reserva, Card Sorting y SUS, en tema claro y oscuro. Ver [especificación detallada](Especificacion-funcional-detallada.md) §7.
+
 ### **RNF03 — Responsive**
 
 La interfaz deberá funcionar en:
@@ -210,6 +236,8 @@ La interfaz deberá funcionar en:
 - escritorio;
 - tablet;
 - móvil.
+
+**Verificación automatizada implementada:** Playwright comprueba `scrollWidth` en 320, 375, 768 y 1280 px para reserva, Card Sorting y SUS. Ver [especificación detallada](Especificacion-funcional-detallada.md) §8.
 
 ### **RNF04 — Consistencia**
 
@@ -373,7 +401,9 @@ Selecciona otro horario disponible.
 
 **├── Servicios**
 
-**└── Horarios**
+**├── Horarios y odontólogos**
+
+**└── Evaluaciones (Card Sorting, SUS)**
 
 ---
 
@@ -675,9 +705,13 @@ Las pruebas automatizadas demuestran contratos del sistema, no usabilidad. La ú
 - En cada viewport: ausencia de scroll horizontal, texto sin recortes, controles utilizables, pasos con nombre comprensible y modal/confirmación dentro del área visible.
 - Registrar dispositivo/navegador, viewport CSS, resultado y captura anonimizada. El chequeo preliminar de 320/768/1280 px se describe en 9.4; falta repetirlo tras los cambios.
 
+**Playwright implementado:** `tests/e2e/accessibility.spec.js` verifica `document.documentElement.scrollWidth` y `document.body.scrollWidth` ≤ viewportWidth en 320/375/768/1280px para `/`, `/evaluacion/card-sorting` y `/evaluacion/sus`.
+
 ### **12.4 Pruebas de accesibilidad**
 
 Completar la lista de 9.4 con teclado, foco, contraste medido, etiquetas, errores, zoom móvil y lector de pantalla. Registrar versión de navegador/herramienta, criterio, resultado y evidencia; no declarar conformidad WCAG sin una auditoría completa.
+
+**axe-core implementado:** `tests/e2e/accessibility.spec.js` ejecuta `@axe-core/playwright` con tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` en páginas de reserva, SUS y Card Sorting, en temas claro y oscuro.
 
 ---
 
