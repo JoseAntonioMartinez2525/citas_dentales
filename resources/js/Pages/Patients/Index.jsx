@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import DentalMark from '../../Components/DentalMark';
 import ThemeToggle from '../../Components/ThemeToggle';
-import { ChevronLeft, ChevronRight, FilePlus2, Search, UserRound, Users, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock3, FilePlus2, Search, UserRound, Users, X } from 'lucide-react';
 import { useState } from 'react';
 
 function initials(name) {
@@ -48,6 +48,7 @@ export default function Index({ patients, filters, totalPatients, flash = {} }) 
                     <nav className="grid gap-1" aria-label="Navegación principal">
                         <Link href="/admin" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><FilePlus2 size={18} /> Agenda</Link>
                         <Link href="/admin/patients" className="flex items-center gap-3 rounded-lg bg-[#e8eef4] px-3 py-2.5 text-sm font-semibold text-[#416984] dark:bg-[#293a47] dark:text-[#c3daea]"><UserRound size={18} /> Pacientes</Link>
+                        <Link href="/admin/services" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><Clock3 size={18} /> Servicios</Link>
                     </nav>
                     <div className="mt-auto border-t border-[#e7eae5] pt-5 dark:border-[#344550]">
                         <div className="flex items-center gap-3 px-2">
@@ -66,6 +67,7 @@ export default function Index({ patients, filters, totalPatients, flash = {} }) 
                         <nav className="flex items-center gap-4 text-sm lg:hidden" aria-label="Navegación principal">
                             <Link href="/admin" className="text-[#65716a] dark:text-[#a9b6bf]">Agenda</Link>
                             <Link href="/admin/patients" className="font-semibold text-[#416984] dark:text-[#a9c9df]">Pacientes</Link>
+                            <Link href="/admin/services" className="text-[#65716a] dark:text-[#a9b6bf]">Servicios</Link>
                         </nav>
                         <div className="hidden text-sm text-[#7a857e] dark:text-[#9aaab4] lg:block">Directorio clínico</div>
                         <ThemeToggle />

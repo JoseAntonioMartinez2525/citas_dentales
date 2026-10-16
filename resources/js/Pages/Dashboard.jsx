@@ -112,6 +112,7 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                         <Link href="/admin/patients" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]">
                             <UserRound size={18} /> Pacientes
                         </Link>
+                        <Link href="/admin/services" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><Clock3 size={18} /> Servicios</Link>
                     </nav>
 
                     <div className="mt-auto border-t border-[#e7eae5] pt-5 dark:border-[#344550]">
@@ -134,6 +135,7 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                         <nav className="flex items-center gap-4 text-sm lg:hidden" aria-label="Navegación principal">
                             <Link href="/admin" className="font-semibold text-[#416984] dark:text-[#a9c9df]">Agenda</Link>
                             <Link href="/admin/patients" className="text-[#65716a] dark:text-[#a9b6bf]">Pacientes</Link>
+                            <Link href="/admin/services" className="text-[#65716a] dark:text-[#a9b6bf]">Servicios</Link>
                         </nav>
                         <div className="hidden text-sm text-[#7a857e] dark:text-[#9aaab4] lg:block">Lunes a viernes <span className="mx-2 text-[#c5cbc5] dark:text-[#50616d]">/</span> 08:00 a 18:00</div>
                         <ThemeToggle />
