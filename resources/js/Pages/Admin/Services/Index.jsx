@@ -124,6 +124,8 @@ export default function Index({ services, flash = {} }) {
                         <Link href="/admin" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><CalendarDays size={18} /> Agenda</Link>
                         <Link href="/admin/patients" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><UserRound size={18} /> Pacientes</Link>
                         <Link href="/admin/services" className="flex items-center gap-3 rounded-lg bg-[#e8eef4] px-3 py-2.5 text-sm font-semibold text-[#416984] dark:bg-[#293a47] dark:text-[#c3daea]"><Clock3 size={18} /> Servicios</Link>
+                        <Link href="/admin/schedules" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] dark:text-[#a9b6bf]"><Clock3 size={18} /> Horarios</Link>
+                        <Link href="/admin/evaluaciones" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] dark:text-[#a9b6bf]"><Check size={18} /> Evaluaciones</Link>
                     </nav>
 
                     <div className="mt-auto border-t border-[#e7eae5] pt-5 dark:border-[#344550]">
@@ -145,10 +147,12 @@ export default function Index({ services, flash = {} }) {
                             </span>
                             <span className="text-sm font-bold">Clínica del Toro</span>
                         </div>
-                        <nav className="flex items-center gap-4 text-sm lg:hidden" aria-label="Navegación principal">
+                        <nav className="flex flex-wrap items-center gap-3 text-sm lg:hidden" aria-label="Navegación principal">
                             <Link href="/admin" className="text-[#65716a] dark:text-[#a9b6bf]">Agenda</Link>
                             <Link href="/admin/patients" className="text-[#65716a] dark:text-[#a9b6bf]">Pacientes</Link>
                             <Link href="/admin/services" className="font-semibold text-[#416984] dark:text-[#a9c9df]">Servicios</Link>
+                            <Link href="/admin/schedules" className="text-[#65716a] dark:text-[#a9b6bf]">Horarios</Link>
+                            <Link href="/admin/evaluaciones" className="text-[#65716a] dark:text-[#a9b6bf]">Evaluaciones</Link>
                         </nav>
                         <div className="hidden text-sm text-[#7a857e] dark:text-[#9aaab4] lg:block">Catálogo de servicios</div>
                         <ThemeToggle />

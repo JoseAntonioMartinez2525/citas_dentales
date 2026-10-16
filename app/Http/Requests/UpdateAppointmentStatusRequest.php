@@ -42,10 +42,11 @@ class UpdateAppointmentStatusRequest extends FormRequest
                 }
 
                 $allowedTransitions = [
-                    'scheduled' => ['confirmed', 'cancelled'],
-                    'confirmed' => ['completed', 'cancelled'],
+                    'scheduled' => ['confirmed', 'cancelled', 'no_show'],
+                    'confirmed' => ['completed', 'cancelled', 'no_show'],
                     'completed' => [],
                     'cancelled' => [],
+                    'no_show' => [],
                 ];
 
                 if ($nextStatus !== $appointment->status && !in_array($nextStatus, $allowedTransitions[$appointment->status], true)) {

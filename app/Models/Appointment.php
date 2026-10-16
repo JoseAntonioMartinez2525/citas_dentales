@@ -12,10 +12,11 @@ class Appointment extends Model
     /** @use HasFactory<AppointmentFactory> */
     use HasFactory;
 
-    public const STATUSES = ['scheduled', 'confirmed', 'completed', 'cancelled'];
+    public const STATUSES = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'];
 
     protected $fillable = [
         'patient_id',
+        'dentist_id',
         'service_id',
         'dentist_name',
         'service_name',
@@ -35,6 +36,11 @@ class Appointment extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function dentist(): BelongsTo
+    {
+        return $this->belongsTo(Dentist::class);
     }
 
     protected function casts(): array

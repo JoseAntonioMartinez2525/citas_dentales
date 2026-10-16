@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Appointment;
+use App\Models\Dentist;
 use App\Models\Patient;
 use App\Models\User;
 use Carbon\Carbon;
@@ -65,10 +66,11 @@ class AppointmentWorkflowTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 08:00:00'));
         $patient = Patient::factory()->create();
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
 
         $response = $this->actingAs(User::factory()->administrator()->create())->post('/admin/appointments', [
             'patient_id' => $patient->id,
-            'dentist_name' => 'Dra. Elena Vega',
+            'dentist_id' => $dentist->id,
             'service_name' => 'Limpieza dental',
             'starts_at' => '2026-10-12 10:00:00',
             'duration_minutes' => 45,
@@ -77,7 +79,8 @@ class AppointmentWorkflowTest extends TestCase
         $response->assertRedirect(route('admin.dashboard', ['date' => '2026-10-12']));
         $this->assertDatabaseHas('appointments', [
             'patient_id' => $patient->id,
-            'dentist_name' => 'Dra. Elena Vega',
+            'dentist_name' => 'Equipo dental',
+            'dentist_id' => $dentist->id,
             'starts_at' => '2026-10-12 10:00:00',
             'ends_at' => '2026-10-12 10:45:00',
             'status' => 'scheduled',
@@ -88,7 +91,9 @@ class AppointmentWorkflowTest extends TestCase
     {
         $this->travelTo(Carbon::parse('2026-10-11 08:00:00'));
         $patient = Patient::factory()->create();
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
         Appointment::factory()->for($patient)->create([
+            'dentist_id' => $dentist->id,
             'dentist_name' => 'Dra. Elena Vega',
             'starts_at' => '2026-10-12 10:00:00',
             'ends_at' => '2026-10-12 10:30:00',
@@ -97,7 +102,7 @@ class AppointmentWorkflowTest extends TestCase
         $response = $this->actingAs(User::factory()->administrator()->create())
             ->from('/admin')->post('/admin/appointments', [
                 'patient_id' => $patient->id,
-                'dentist_name' => 'Dra. Elena Vega',
+                'dentist_id' => $dentist->id,
                 'service_name' => 'Revisión',
                 'starts_at' => '2026-10-12 10:15:00',
                 'duration_minutes' => 30,
@@ -120,6 +125,35 @@ class AppointmentWorkflowTest extends TestCase
         $this->assertDatabaseHas('appointments', [
             'id' => $appointment->id,
             'status' => 'confirmed',
+        ]);
+    }
+
+    public function test_confirmed_appointment_can_be_marked_as_no_show(): void
+    {
+        $appointment = Appointment::factory()->create(['status' => 'confirmed']);
+
+        $this->actingAs(User::factory()->administrator()->create())
+            ->patch(route('admin.appointments.status', $appointment), ['status' => 'no_show'])
+            ->assertRedirect(route('admin.dashboard', ['date' => $appointment->starts_at->toDateString()]));
+
+        $this->assertDatabaseHas('appointments', [
+            'id' => $appointment->id,
+            'status' => 'no_show',
+        ]);
+    }
+
+    public function test_no_show_appointment_cannot_be_reopened(): void
+    {
+        $appointment = Appointment::factory()->create(['status' => 'no_show']);
+
+        $this->actingAs(User::factory()->administrator()->create())
+            ->from('/admin')
+            ->patch(route('admin.appointments.status', $appointment), ['status' => 'confirmed'])
+            ->assertSessionHasErrors('status');
+
+        $this->assertDatabaseHas('appointments', [
+            'id' => $appointment->id,
+            'status' => 'no_show',
         ]);
     }
 

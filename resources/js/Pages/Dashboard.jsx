@@ -19,6 +19,7 @@ const statusLabels = {
     confirmed: 'Confirmada',
     completed: 'Completada',
     cancelled: 'Cancelada',
+    no_show: 'No asistió',
 };
 
 const statusStyles = {
@@ -26,6 +27,7 @@ const statusStyles = {
     confirmed: 'bg-[#e8eef4] text-[#365c78] ring-[#c8d7e2] dark:bg-[#293a47] dark:text-[#c3daea] dark:ring-[#40576a]',
     completed: 'bg-slate-100 text-slate-700 ring-slate-200',
     cancelled: 'bg-rose-50 text-rose-700 ring-rose-200',
+    no_show: 'bg-orange-50 text-orange-800 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:ring-orange-900',
 };
 
 function formatDate(date) {
@@ -43,12 +45,12 @@ function shiftDate(date, amount) {
     return [shiftedDate.getFullYear(), String(shiftedDate.getMonth() + 1).padStart(2, '0'), String(shiftedDate.getDate()).padStart(2, '0')].join('-');
 }
 
-export default function Dashboard({ date, appointments, patients, stats, flash = {} }) {
+export default function Dashboard({ date, appointments, patients, dentists, stats, flash = {} }) {
     const [search, setSearch] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const form = useForm({
         patient_id: '',
-        dentist_name: '',
+        dentist_id: dentists[0] ? String(dentists[0].id) : '',
         service_name: '',
         starts_at: `${date}T09:00`,
         duration_minutes: '30',
@@ -113,6 +115,8 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                             <UserRound size={18} /> Pacientes
                         </Link>
                         <Link href="/admin/services" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><Clock3 size={18} /> Servicios</Link>
+                        <Link href="/admin/schedules" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><Clock3 size={18} /> Horarios y odontólogos</Link>
+                        <Link href="/admin/evaluaciones" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#65716a] transition hover:bg-[#eef2f6] hover:text-[#1e2925] dark:text-[#a9b6bf] dark:hover:bg-[#25333c] dark:hover:text-[#e5edf2]"><Check size={18} /> Evaluaciones</Link>
                     </nav>
 
                     <div className="mt-auto border-t border-[#e7eae5] pt-5 dark:border-[#344550]">
@@ -132,12 +136,14 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                             <span className="flex size-9 items-center justify-center rounded-lg bg-[#416984] text-white dark:bg-[#527e9d]"><DentalMark className="size-[18px]" /></span>
                             <span className="text-sm font-bold">Clínica del Toro</span>
                         </div>
-                        <nav className="flex items-center gap-4 text-sm lg:hidden" aria-label="Navegación principal">
+                        <nav className="flex flex-wrap items-center gap-3 text-sm lg:hidden" aria-label="Navegación principal">
                             <Link href="/admin" className="font-semibold text-[#416984] dark:text-[#a9c9df]">Agenda</Link>
                             <Link href="/admin/patients" className="text-[#65716a] dark:text-[#a9b6bf]">Pacientes</Link>
                             <Link href="/admin/services" className="text-[#65716a] dark:text-[#a9b6bf]">Servicios</Link>
+                            <Link href="/admin/schedules" className="text-[#65716a] dark:text-[#a9b6bf]">Horarios</Link>
+                            <Link href="/admin/evaluaciones" className="text-[#65716a] dark:text-[#a9b6bf]">Evaluaciones</Link>
                         </nav>
-                        <div className="hidden text-sm text-[#7a857e] dark:text-[#9aaab4] lg:block">Lunes a viernes <span className="mx-2 text-[#c5cbc5] dark:text-[#50616d]">/</span> 08:00 a 18:00</div>
+                        <div className="hidden text-sm text-[#7a857e] dark:text-[#9aaab4] lg:block">Agenda por odontólogo</div>
                         <ThemeToggle />
                         <Link href="/admin/logout" method="post" as="button" className="h-10 rounded-lg border border-[#dfe4de] px-3 text-sm font-medium text-[#536159] dark:border-[#3a4a55] dark:text-[#c0cbd3]">Cerrar sesión</Link>
                         <button
@@ -146,7 +152,7 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                                 form.setData('starts_at', `${date}T09:00`);
                                 setIsFormOpen(true);
                             }}
-                            disabled={patients.length === 0}
+                            disabled={patients.length === 0 || dentists.length === 0}
                             className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#416984] px-4 text-sm font-semibold text-white transition hover:bg-[#31556f] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#527e9d] dark:hover:bg-[#628ca9]"
                             title={patients.length === 0 ? 'Agrega un paciente antes de reservar' : 'Crear una cita'}
                         >
@@ -220,13 +226,14 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                                                 aria-label={`Estado de la cita de ${appointment.patient.name}`}
                                                 value={appointment.status}
                                                 onChange={(event) => updateStatus(appointment, event.target.value)}
-                                                disabled={appointment.status === 'completed' || appointment.status === 'cancelled'}
+                                                disabled={['completed', 'cancelled', 'no_show'].includes(appointment.status)}
                                                 className="h-9 max-w-40 rounded-lg border border-[#dfe4de] bg-white px-2 text-xs font-medium text-[#536159] disabled:opacity-60 dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#d4e0e8]"
                                             >
                                                 <option value={appointment.status}>{statusLabels[appointment.status] ?? appointment.status}</option>
                                                 {appointment.status === 'scheduled' && <option value="confirmed">Confirmada</option>}
                                                 {appointment.status === 'confirmed' && <option value="completed">Completada</option>}
                                                 {['scheduled', 'confirmed'].includes(appointment.status) && <option value="cancelled">Cancelada</option>}
+                                                {['scheduled', 'confirmed'].includes(appointment.status) && <option value="no_show">No asistió</option>}
                                             </select>
                                         </div>
                                     </article>
@@ -265,8 +272,11 @@ export default function Dashboard({ date, appointments, patients, stats, flash =
                             </label>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <label className="grid gap-1.5 text-sm font-medium">Odontólogo
-                                    <input value={form.data.dentist_name} onChange={(event) => form.setData('dentist_name', event.target.value)} placeholder="Dra. Elena Vega" className="h-11 rounded-lg border border-[#dfe4de] px-3 font-normal dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2] dark:placeholder:text-[#788a96]" required />
-                                    {form.errors.dentist_name && <span className="text-xs font-normal text-rose-700">{form.errors.dentist_name}</span>}
+                                    <select value={form.data.dentist_id} onChange={(event) => form.setData('dentist_id', event.target.value)} className="h-11 rounded-lg border border-[#dfe4de] bg-white px-3 font-normal dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]" required>
+                                        <option value="">Seleccionar odontólogo</option>
+                                        {dentists.map((dentist) => <option key={dentist.id} value={dentist.id}>{dentist.name}</option>)}
+                                    </select>
+                                    {form.errors.dentist_id && <span className="text-xs font-normal text-rose-700">{form.errors.dentist_id}</span>}
                                 </label>
                                 <label className="grid gap-1.5 text-sm font-medium">Tratamiento
                                     <input value={form.data.service_name} onChange={(event) => form.setData('service_name', event.target.value)} placeholder="Limpieza dental" className="h-11 rounded-lg border border-[#dfe4de] px-3 font-normal dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2] dark:placeholder:text-[#788a96]" required />

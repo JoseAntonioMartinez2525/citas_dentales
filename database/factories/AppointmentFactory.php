@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Appointment;
+use App\Models\Dentist;
 use App\Models\Patient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,6 +21,7 @@ class AppointmentFactory extends Factory
     {
         return [
             'patient_id' => Patient::factory(),
+            'dentist_id' => Dentist::factory(),
             'dentist_name' => 'Dra. Elena Vega',
             'service_name' => 'Limpieza dental',
             'starts_at' => now()->addDay()->setTime(9, 0),

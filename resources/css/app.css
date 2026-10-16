@@ -24,6 +24,17 @@ html.dark {
     background: #121a20;
 }
 
+@layer base {
+    :focus-visible {
+        outline: 2px solid #416984;
+        outline-offset: 2px;
+    }
+
+    html.dark :focus-visible {
+        outline-color: #a9c9df;
+    }
+}
+
 html:not(.dark) body {
     background: #f3f5f7;
 }
@@ -33,6 +44,24 @@ body {
     min-height: 100vh;
     margin: 0;
     background: inherit;
+}
+
+@layer utilities {
+    html:not(.dark) [class~="text-[#728078]"],
+    html:not(.dark) [class~="text-[#748078]"],
+    html:not(.dark) [class~="text-[#6d7971]"],
+    html:not(.dark) [class~="text-[#87918b]"],
+    html:not(.dark) [class~="text-[#7a857e]"],
+    html:not(.dark) [class~="text-[#89938d]"],
+    html:not(.dark) [class~="text-[#899ba7]"],
+    html:not(.dark) [class~="text-[#9aa39d]"] {
+        color: #59665e;
+    }
+
+    html:not(.dark) [class~="text-[#5f7890]"],
+    html:not(.dark) [class~="text-[#627d94]"] {
+        color: #45627a;
+    }
 }
 
 button,

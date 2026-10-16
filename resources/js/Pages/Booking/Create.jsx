@@ -15,10 +15,11 @@ function formatLongDate(date) {
     }).format(new Date(`${date}T12:00:00`));
 }
 
-export default function Create({ services, selectedServiceId, date, minimumDate, slots, patientPortalUrl, flash = {} }) {
+export default function Create({ services, dentists, selectedDentistId, selectedServiceId, date, minimumDate, slots, patientPortalUrl, flash = {} }) {
     const [step, setStep] = useState(selectedServiceId ? 2 : 1);
     const form = useForm({
         service_id: selectedServiceId ? String(selectedServiceId) : '',
+        dentist_id: selectedDentistId ? String(selectedDentistId) : '',
         date,
         starts_at: '',
         name: '',
@@ -26,6 +27,7 @@ export default function Create({ services, selectedServiceId, date, minimumDate,
         email: '',
     });
     const selectedService = services.find((service) => String(service.id) === String(form.data.service_id));
+    const selectedDentist = dentists.find((dentist) => String(dentist.id) === String(form.data.dentist_id));
     const assessmentService = services.find((service) => service.slug === 'valoracion-general');
     const selectedSlot = slots.find((slot) => slot.value === form.data.starts_at);
 
@@ -33,13 +35,19 @@ export default function Create({ services, selectedServiceId, date, minimumDate,
         form.setData('service_id', String(service.id));
         form.clearErrors();
         setStep(2);
-        router.get('/', { service_id: service.id, date: form.data.date }, { preserveState: true, preserveScroll: true });
+        router.get('/', { service_id: service.id, dentist_id: form.data.dentist_id, date: form.data.date }, { preserveState: true, preserveScroll: true });
     }
 
     function chooseDate(nextDate) {
         form.setData((current) => ({ ...current, date: nextDate, starts_at: '' }));
         form.clearErrors('starts_at');
-        router.get('/', { service_id: form.data.service_id, date: nextDate }, { preserveState: true, preserveScroll: true });
+        router.get('/', { service_id: form.data.service_id, dentist_id: form.data.dentist_id, date: nextDate }, { preserveState: true, preserveScroll: true });
+    }
+
+    function chooseDentist(dentistId) {
+        form.setData((current) => ({ ...current, dentist_id: dentistId, starts_at: '' }));
+        form.clearErrors('starts_at');
+        router.get('/', { service_id: form.data.service_id, dentist_id: dentistId, date: form.data.date }, { preserveState: true, preserveScroll: true });
     }
 
     function chooseSlot(slot) {
@@ -133,13 +141,19 @@ export default function Create({ services, selectedServiceId, date, minimumDate,
                                 <button type="button" onClick={() => setStep(1)} className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#416984] dark:text-[#a9c9df]"><ArrowLeft size={16} /> Cambiar servicio</button>
                                 <h2 className="text-xl font-semibold">2. Elige fecha y horario</h2>
                                 {selectedService && <p className="mt-1 text-sm text-[#728078] dark:text-[#a0afb9]">{selectedService.name} · {selectedService.duration_minutes} min y {selectedService.buffer_minutes} min de preparación</p>}
+                                <label className="mt-5 grid max-w-md gap-1.5 text-sm font-medium">Odontólogo
+                                    <select value={form.data.dentist_id} onChange={(event) => chooseDentist(event.target.value)} className="h-11 rounded-lg border border-[#dfe4de] bg-white px-3 text-base dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]" required>
+                                        <option value="">Seleccionar odontólogo</option>
+                                        {dentists.map((dentist) => <option key={dentist.id} value={dentist.id}>{dentist.name}</option>)}
+                                    </select>
+                                </label>
                                 <label className="mt-5 grid max-w-xs gap-1.5 text-sm font-medium">Fecha
                                     <span className="relative">
                                         <CalendarDays size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#87918b] dark:text-[#94a4af]" />
                                         <input type="date" min={minimumDate} value={form.data.date} onChange={(event) => chooseDate(event.target.value)} aria-label="Fecha de la cita" className="h-11 w-full rounded-lg border border-[#dfe4de] bg-white pl-10 pr-3 text-base dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]" />
                                     </span>
                                 </label>
-                                <p className="mt-5 text-sm font-medium">Horarios disponibles</p>
+                                <p className="mt-5 text-sm font-medium">Horarios disponibles{selectedDentist ? ` · ${selectedDentist.name}` : ''}</p>
                                 {slots.length > 0 ? (
                                     <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
                                         {slots.map((slot) => (
@@ -185,6 +199,7 @@ export default function Create({ services, selectedServiceId, date, minimumDate,
                                 <p className="mt-1 text-sm text-[#728078] dark:text-[#a0afb9]">Verifica el resumen antes de enviar la solicitud.</p>
                                 <dl className="mt-5 divide-y divide-[#e9ece8] rounded-lg border border-[#e2e6e0] px-4 dark:divide-[#344550] dark:border-[#344550]">
                                     <div className="flex flex-wrap justify-between gap-2 py-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Servicio</dt><dd className="font-medium">{selectedService?.name}</dd></div>
+                                    <div className="flex flex-wrap justify-between gap-2 py-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Odontólogo</dt><dd className="font-medium">{selectedDentist?.name}</dd></div>
                                     <div className="flex flex-wrap justify-between gap-2 py-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Fecha</dt><dd className="font-medium capitalize">{formatLongDate(form.data.date)}</dd></div>
                                     <div className="flex flex-wrap justify-between gap-2 py-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Horario</dt><dd className="font-medium">{selectedSlot?.label}</dd></div>
                                     <div className="flex flex-wrap justify-between gap-2 py-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Paciente</dt><dd className="font-medium">{form.data.name}</dd></div>
@@ -199,6 +214,10 @@ export default function Create({ services, selectedServiceId, date, minimumDate,
                         )}
                     </section>
                     <p className="mx-auto mt-5 max-w-2xl text-center text-xs leading-5 text-[#87918b] dark:text-[#899ba7]">Horarios y servicios de demostración: confirma las reglas reales con el consultorio antes de usarlos fuera del prototipo.</p>
+                    <nav aria-label="Evaluaciones de experiencia" className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
+                        <Link href="/evaluacion/card-sorting" className="text-[#416984] underline-offset-4 hover:underline dark:text-[#a9c9df]">Participar en Card Sorting</Link>
+                        <Link href="/evaluacion/sus" className="text-[#416984] underline-offset-4 hover:underline dark:text-[#a9c9df]">Responder escala de usabilidad</Link>
+                    </nav>
                 </main>
             </div>
         </>

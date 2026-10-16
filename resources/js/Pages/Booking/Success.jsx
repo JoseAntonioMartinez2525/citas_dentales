@@ -26,6 +26,7 @@ export default function Success({ appointment, hasPatientPortal }) {
                         <dl className="mt-6 grid gap-3 rounded-lg bg-[#f3f5f7] p-4 text-left dark:bg-[#141d24]">
                             <div className="flex justify-between gap-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Referencia</dt><dd className="font-semibold">{appointment.reference}</dd></div>
                             <div className="flex justify-between gap-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Servicio</dt><dd className="font-semibold">{appointment.service}</dd></div>
+                            <div className="flex justify-between gap-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Odontólogo</dt><dd className="font-semibold">{appointment.dentist}</dd></div>
                             <div className="flex justify-between gap-3 text-sm"><dt className="text-[#728078] dark:text-[#a0afb9]">Fecha y hora</dt><dd className="font-semibold">{appointment.starts_at}</dd></div>
                         </dl>
                         {hasPatientPortal && <p className="mt-4 text-xs leading-5 text-[#728078] dark:text-[#a0afb9]">El enlace de “Mis citas” es privado: quien lo tenga puede consultar o cancelar las citas vinculadas. Guárdalo en un lugar seguro; puedes revocarlo desde el portal.</p>}

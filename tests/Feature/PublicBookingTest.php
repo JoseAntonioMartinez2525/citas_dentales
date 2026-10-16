@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Appointment;
+use App\Models\Dentist;
 use App\Models\Patient;
 use App\Models\Service;
 use Carbon\Carbon;
@@ -64,6 +65,7 @@ class PublicBookingTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create(['duration_minutes' => 30, 'buffer_minutes' => 15]);
         $appointment = Appointment::factory()->create([
+            'dentist_id' => Dentist::query()->where('name', 'Equipo dental')->value('id'),
             'starts_at' => '2026-10-12 10:00:00',
             'ends_at' => '2026-10-12 10:30:00',
             'buffer_minutes' => 15,
@@ -79,6 +81,37 @@ class PublicBookingTest extends TestCase
 
         $this->assertDatabaseCount('appointments', 1);
         $this->assertDatabaseHas('appointments', ['id' => $appointment->id]);
+    }
+
+    public function test_public_booking_availability_is_separated_by_dentist(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
+        $service = Service::factory()->create(['duration_minutes' => 30, 'buffer_minutes' => 15]);
+        $firstDentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
+        $secondDentist = Dentist::factory()->create(['name' => 'Dra. Elena Vega']);
+        Schedule::query()->create([
+            'dentist_id' => $secondDentist->id,
+            'weekday' => 1,
+            'opens_at' => '08:00',
+            'closes_at' => '18:00',
+        ]);
+        Appointment::factory()->create([
+            'dentist_id' => $firstDentist->id,
+            'starts_at' => '2026-10-12 10:00:00',
+            'ends_at' => '2026-10-12 10:30:00',
+        ]);
+
+        $this->get('/?service_id='.$service->id.'&dentist_id='.$secondDentist->id.'&date=2026-10-12')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('selectedDentistId', $secondDentist->id)
+                ->where('slots.4.label', '10:00'));
+
+        $this->get('/?service_id='.$service->id.'&dentist_id='.$firstDentist->id.'&date=2026-10-12')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('selectedDentistId', $firstDentist->id)
+                ->where('slots.4.label', '11:30'));
     }
 
     public function test_public_booking_requires_an_assessment_for_restricted_services(): void
