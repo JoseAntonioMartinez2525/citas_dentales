@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Dentist;
 use App\Models\Patient;
 use App\Models\PatientPortalAccess;
+use App\Models\Schedule;
 use App\Models\Service;
 use App\Services\AppointmentAvailability;
 use Carbon\Carbon;
@@ -41,7 +42,7 @@ class PublicBookingController extends Controller
         $dentists = Dentist::query()
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'is_active']);
         $selectedDentist = $dentists->firstWhere('id', (int) ($validated['dentist_id'] ?? 0))
             ?? $dentists->first();
         $date = $validated['date'] ?? now()->addDay()->toDateString();
@@ -57,7 +58,7 @@ class PublicBookingController extends Controller
                 ? $availability->slots($selectedService, $date, $selectedDentist)
                 : [],
             'patientPortalUrl' => $request->session()->get('booking_patient_id') && is_string($request->session()->get('booking_portal_token'))
-                ? URL::to('/mis-citas/' . $request->session()->get('booking_portal_token'))
+                ? URL::to('/mis-citas/'.$request->session()->get('booking_portal_token'))
                 : null,
         ]);
     }
@@ -65,8 +66,7 @@ class PublicBookingController extends Controller
     public function store(
         StorePublicAppointmentRequest $request,
         AppointmentAvailability $availability,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $validated = $request->validated();
         $startsAt = Carbon::createFromFormat('Y-m-d\\TH:i', $validated['starts_at'], config('app.timezone'));
         $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
@@ -142,7 +142,7 @@ class PublicBookingController extends Controller
         ]);
 
         $request->session()->flash('booking_summary', [
-            'reference' => 'CDT-' . str_pad((string) $appointment->id, 6, '0', STR_PAD_LEFT),
+            'reference' => 'CDT-'.str_pad((string) $appointment->id, 6, '0', STR_PAD_LEFT),
             'service' => $service->name,
             'dentist' => $appointment->dentist_name,
             'starts_at' => $startsAt->format('Y-m-d H:i'),
@@ -157,7 +157,7 @@ class PublicBookingController extends Controller
     {
         $summary = $request->session()->get('booking_summary');
 
-        if (!$summary) {
+        if (! $summary) {
             return to_route('booking.start');
         }
 

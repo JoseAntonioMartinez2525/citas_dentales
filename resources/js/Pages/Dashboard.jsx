@@ -12,7 +12,7 @@ import {
     UserRound,
     X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const statusLabels = {
     scheduled: 'Pendiente',
@@ -45,14 +45,14 @@ function shiftDate(date, amount) {
     return [shiftedDate.getFullYear(), String(shiftedDate.getMonth() + 1).padStart(2, '0'), String(shiftedDate.getDate()).padStart(2, '0')].join('-');
 }
 
-export default function Dashboard({ date, appointments, patients, dentists, stats, selectedDentistId, flash = {} }) {
+export default function Dashboard({ date, appointments, patients, dentists, stats, selectedDentistId, selectedPatientId, selectedPatientName, selectedPatientDetails, flash = {} }) {
     const [search, setSearch] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const form = useForm({
         patient_id: '',
-        dentist_id: dentists[0] ? String(dentists[0].id) : '',
+        dentist_id: selectedDentistId ? String(selectedDentistId) : '',
         service_name: '',
-        starts_at: `${date}T09:00`,
+        starts_at: '',
         duration_minutes: '30',
         notes: '',
     });
@@ -73,11 +73,15 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
     }, [appointments, search]);
 
     function navigateToDate(nextDate) {
-        router.get('/', { date: nextDate, dentist_id: selectedDentistId }, { preserveState: true, preserveScroll: true });
+        router.get('/admin', { date: nextDate, dentist_id: selectedDentistId, patient_id: selectedPatientId }, { preserveState: true, preserveScroll: true });
     }
 
     function filterDentist(dentistId) {
-        router.get('/', { date, dentist_id: dentistId || null }, { preserveState: true, preserveScroll: true });
+        router.get('/admin', { date, dentist_id: dentistId || null, patient_id: selectedPatientId }, { preserveState: true, preserveScroll: true });
+    }
+
+    function filterPatient(patientId, patientName) {
+        router.get('/admin', { date, dentist_id: selectedDentistId, patient_id: patientId || null }, { preserveState: true, preserveScroll: true });
     }
 
     function submitAppointment(event) {
@@ -153,7 +157,8 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
                         <button
                             type="button"
                             onClick={() => {
-                                form.setData('starts_at', `${date}T09:00`);
+                                form.reset();
+                                form.setData('dentist_id', selectedDentistId ? String(selectedDentistId) : '');
                                 setIsFormOpen(true);
                             }}
                             disabled={patients.length === 0 || dentists.length === 0}
@@ -175,19 +180,44 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
                             <input type="date" value={date} onChange={(event) => navigateToDate(event.target.value)} aria-label="Seleccionar día" className="h-10 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm text-[#39473f] dark:border-[#3a4a55] dark:bg-[#1c2730] dark:text-[#e5edf2]" />
                             <button type="button" onClick={() => navigateToDate(shiftDate(date, 1))} aria-label="Día siguiente" className="flex size-10 items-center justify-center rounded-lg border border-[#dfe4de] bg-white text-[#536159] hover:bg-[#f7f9f6] dark:border-[#3a4a55] dark:bg-[#1c2730] dark:text-[#c0cbd3] dark:hover:bg-[#263640]"><ChevronRight size={18} /></button>
                         </div>
-                        <label className="grid gap-1.5 text-sm font-medium">
-                            Odontólogo
-                            <select
-                                value={selectedDentistId ?? ''}
-                                onChange={(event) => filterDentist(event.target.value ? Number(event.target.value) : null)}
-                                className="h-11 w-full min-w-48 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]"
-                            >
-                                <option value="">Todos los odontólogos</option>
-                                {dentists.map((dentist) => (
-                                    <option key={dentist.id} value={dentist.id}>{dentist.name}</option>
-                                ))}
-                            </select>
-                        </label>
+<label className="grid gap-1.5 text-sm font-medium">
+                                Odontólogo
+                                <select
+                                    value={selectedDentistId ?? ''}
+                                    onChange={(event) => filterDentist(event.target.value ? Number(event.target.value) : null)}
+                                    className="h-11 w-full min-w-48 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]"
+                                >
+                                    <option value="">Todos los odontólogos</option>
+                                    {dentists.map((dentist) => (
+                                        <option key={dentist.id} value={dentist.id}>{dentist.name}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            {selectedPatientName && (
+                                <label className="grid gap-1.5 text-sm font-medium flex items-end">
+                                    Paciente: <span className="text-[#416984] font-semibold">{selectedPatientName}</span>
+                                    <button type="button" onClick={() => filterPatient(null, null)} className="ml-2 h-9 rounded-lg border border-[#dfe4de] bg-white px-2 text-xs text-[#536159] hover:bg-[#f7f9f6] dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#c0cbd3] dark:hover:bg-[#263640]">X</button>
+                                </label>
+                            )}
+                            {!selectedPatientName && (
+                                <label className="grid gap-1.5 text-sm font-medium">
+                                    Paciente
+                                    <select
+                                        value={selectedPatientId ?? ''}
+                                        onChange={(event) => {
+                                            const id = event.target.value ? Number(event.target.value) : null;
+                                            const name = event.target.value ? patients.find(p => p.id === id)?.name : null;
+                                            filterPatient(id, name);
+                                        }}
+                                        className="h-11 w-full min-w-48 rounded-lg border border-[#dfe4de] bg-white px-3 text-sm dark:border-[#3a4a55] dark:bg-[#141d24] dark:text-[#e5edf2]"
+                                    >
+                                        <option value="">Todos los pacientes</option>
+                                        {patients.map((patient) => (
+                                            <option key={patient.id} value={patient.id}>{patient.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
                     </section>
 
                     {flash.success && <div role="status" className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{flash.success}</div>}
@@ -209,6 +239,36 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
                             </div>
                         ))}
                     </section>
+
+                    {selectedPatientDetails && (
+                        <section className="mb-7 rounded-xl border border-[#e2e6e0] bg-white px-4 py-4 sm:px-6 dark:border-[#344550] dark:bg-[#1c2730]">
+                            <h2 className="text-base font-semibold mb-3">Datos del paciente</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-xs text-[#7a857e] dark:text-[#9aaab4]">Nombre completo</p>
+                                    <p className="text-sm font-semibold text-[#1e2925] dark:text-[#e5edf2]">{selectedPatientDetails.name}</p>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-xs text-[#7a857e] dark:text-[#9aaab4]">Teléfono</p>
+                                    <a href={`tel:${selectedPatientDetails.phone}`} className="text-sm font-medium text-[#416984] hover:underline dark:text-[#a9c9df]">{selectedPatientDetails.phone}</a>
+                                </div>
+                                <div className="flex flex-col gap-1 sm:col-span-2">
+                                    <p className="text-xs text-[#7a857e] dark:text-[#9aaab4]">Correo electrónico</p>
+                                    <p className="text-sm text-[#1e2925] dark:text-[#e5edf2]">{selectedPatientDetails.email || 'Sin correo registrado'}</p>
+                                </div>
+                                <div className="flex flex-col gap-1 sm:col-span-2">
+                                    <p className="text-xs text-[#7a857e] dark:text-[#9aaab4]">Fecha de nacimiento</p>
+                                    <p className="text-sm text-[#1e2925] dark:text-[#e5edf2]">{selectedPatientDetails.birth_date || 'No registrada'}</p>
+                                </div>
+                                {selectedPatientDetails.notes && (
+                                    <div className="flex flex-col gap-1 sm:col-span-2">
+                                        <p className="text-xs text-[#7a857e] dark:text-[#9aaab4]">Notas clínicas</p>
+                                        <p className="text-sm text-[#1e2925] dark:text-[#e5edf2]">{selectedPatientDetails.notes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    )}
 
                     <section className="overflow-hidden rounded-xl border border-[#e2e6e0] bg-white dark:border-[#344550] dark:bg-[#1c2730]">
                         <div className="flex flex-col gap-4 border-b border-[#e9ece8] px-4 py-4 dark:border-[#344550] sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -262,7 +322,7 @@ export default function Dashboard({ date, appointments, patients, dentists, stat
                                 <span className="mb-4 flex size-12 items-center justify-center rounded-xl bg-[#e8eef4] text-[#496d88] dark:bg-[#293a47] dark:text-[#a9c9df]"><CalendarDays size={22} /></span>
                                 <h3 className="font-semibold">{search ? 'No hay resultados' : 'No hay citas para este día'}</h3>
                                 <p className="mt-1 max-w-sm text-sm text-[#7a857e] dark:text-[#9aaab4]">{search ? 'Prueba con otro nombre, tratamiento u odontólogo.' : 'Cuando registres una cita, aparecerá aquí en orden de horario.'}</p>
-                                {!search && patients.length > 0 && <button type="button" onClick={() => setIsFormOpen(true)} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#416984] dark:text-[#a9c9df]"><Plus size={16} /> Agendar primera cita</button>}
+                                {!search && patients.length > 0 && <button type="button" onClick={() => { form.reset(); form.setData('dentist_id', selectedDentistId ? String(selectedDentistId) : ''); setIsFormOpen(true); }} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#416984] dark:text-[#a9c9df]"><Plus size={16} /> Agendar primera cita</button>}
                                 {!search && patients.length === 0 && <Link href="/admin/patients" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#416984] dark:text-[#a9c9df]"><Plus size={16} /> Agregar primer paciente</Link>}
                             </div>
                         )}

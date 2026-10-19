@@ -22,19 +22,32 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'date' => ['nullable', 'date_format:Y-m-d'],
             'dentist_id' => ['nullable', 'integer', 'exists:dentists,id'],
+            'patient_id' => ['nullable', 'integer', 'exists:patients,id'],
         ]);
         $date = $validated['date'] ?? today()->toDateString();
 
         $appointments = Appointment::query()
             ->with('patient:id,name,phone')
             ->when(isset($validated['dentist_id']), fn ($query) => $query->where('dentist_id', $validated['dentist_id']))
+            ->when(isset($validated['patient_id']), fn ($query) => $query->where('patient_id', $validated['patient_id']))
             ->whereDate('starts_at', $date)
             ->orderBy('starts_at')
             ->get();
 
+        $patientName = null;
+        $patientDetails = null;
+        if (isset($validated['patient_id'])) {
+            $patient = Patient::query()->find($validated['patient_id']);
+            $patientName = $patient?->name;
+            $patientDetails = $patient?->only(['id', 'name', 'phone', 'email', 'birth_date', 'notes']);
+        }
+
         return Inertia::render('Dashboard', [
             'date' => $date,
             'selectedDentistId' => isset($validated['dentist_id']) ? (int) $validated['dentist_id'] : null,
+            'selectedPatientId' => isset($validated['patient_id']) ? (int) $validated['patient_id'] : null,
+            'selectedPatientName' => $patientName,
+            'selectedPatientDetails' => $patientDetails,
             'appointments' => $appointments->map(fn (Appointment $appointment): array => [
                 'id' => $appointment->id,
                 'patient' => $appointment->patient->only(['id', 'name', 'phone']),
@@ -62,8 +75,7 @@ class AppointmentController extends Controller
     public function store(
         StoreAppointmentRequest $request,
         AppointmentAvailability $availability,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $validated = $request->validated();
         $startsAt = Carbon::parse($validated['starts_at']);
         $dentist = Dentist::query()->where('is_active', true)->findOrFail($validated['dentist_id']);
@@ -88,7 +100,7 @@ class AppointmentController extends Controller
                 ...$validated,
                 'dentist_name' => $dentist->name,
                 'starts_at' => $startsAt,
-                'ends_at' => $startsAt->copy()->addMinutes($validated['duration_minutes']),
+                'ends_at' => $startsAt->copy()->addMinutes((int) $validated['duration_minutes']),
                 'status' => 'scheduled',
             ]);
         });

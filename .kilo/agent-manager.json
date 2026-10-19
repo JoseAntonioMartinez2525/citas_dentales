@@ -7,13 +7,6 @@
       "createdAt": "2026-05-05T17:37:03.660Z",
       "remote": "origin"
     },
-    "wt-1778262328007-1": {
-      "branch": "sustaining-diagnostic",
-      "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\sustaining-diagnostic",
-      "parentBranch": "main",
-      "createdAt": "2026-05-08T17:45:28.007Z",
-      "remote": "origin"
-    },
     "wt-1779301023270-1": {
       "branch": "pyrite-lentil",
       "path": "c:\\inetpub\\wwwroot\\apps\\formatos.pedpd\\.kilo\\worktrees\\pyrite-lentil",
@@ -226,7 +219,6 @@
   },
   "worktreeOrder": [
     "wt-1778002623660-1",
-    "wt-1778262328007-1",
     "wt-1779301023270-1",
     "wt-1779302929646-2",
     "wt-1779383640021-1",

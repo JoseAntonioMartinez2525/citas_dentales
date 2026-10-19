@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Dentist;
-use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -35,8 +34,8 @@ class ScheduleManagementTest extends TestCase
         $this->assertDatabaseHas('schedules', [
             'dentist_id' => $dentist->id,
             'weekday' => 1,
-            'opens_at' => '08:30:00',
-            'closes_at' => '17:30:00',
+            'opens_at' => '08:30',
+            'closes_at' => '17:30',
         ]);
         $this->assertDatabaseMissing('schedules', [
             'dentist_id' => $dentist->id,

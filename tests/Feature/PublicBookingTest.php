@@ -21,9 +21,9 @@ class PublicBookingTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create(['duration_minutes' => 30, 'buffer_minutes' => 15]);
 
-        $this->get('/?service_id=' . $service->id . '&date=2026-10-12')
+        $this->get('/?service_id='.$service->id.'&date=2026-10-12')
             ->assertOk()
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->component('Booking/Create')
                 ->where('selectedServiceId', $service->id)
                 ->where('slots.4.label', '10:00'));
@@ -60,7 +60,7 @@ class PublicBookingTest extends TestCase
         ]);
         $this->get(route('booking.success'))
             ->assertOk()
-            ->assertInertia(fn(Assert $page) => $page->component('Booking/Success'));
+            ->assertInertia(fn (Assert $page) => $page->component('Booking/Success'));
     }
 
     public function test_public_booking_rejects_a_slot_blocked_by_another_appointment(): void
@@ -123,9 +123,9 @@ class PublicBookingTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
         $service = Service::factory()->create(['requires_assessment' => true]);
 
-        $this->get('/?service_id=' . $service->id . '&date=2026-10-12')
+        $this->get('/?service_id='.$service->id.'&date=2026-10-12')
             ->assertOk()
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->component('Booking/Create')
                 ->where('selectedServiceId', null)
                 ->where('services.0.requires_assessment', true)
@@ -171,9 +171,9 @@ class PublicBookingTest extends TestCase
         ]);
 
         $this->flushSession();
-        $this->get('/mis-citas/' . $portalToken)
+        $this->get('/mis-citas/'.$portalToken)
             ->assertOk()
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->component('Booking/Appointments')
                 ->has('appointments', 1)
                 ->where('appointments.0.service_name', $service->name));
@@ -186,8 +186,8 @@ class PublicBookingTest extends TestCase
             'id' => $appointment->id,
             'status' => 'cancelled',
         ]);
-        $this->get('/?service_id=' . $service->id . '&dentist_id=' . $dentist->id . '&date=2026-10-12')
-            ->assertInertia(fn(Assert $page) => $page->where('slots.4.label', '10:00'));
+        $this->get('/?service_id='.$service->id.'&dentist_id='.$dentist->id.'&date=2026-10-12')
+            ->assertInertia(fn (Assert $page) => $page->where('slots.4.label', '10:00'));
     }
 
     public function test_patient_portal_requires_a_booking_session(): void
@@ -217,7 +217,7 @@ class PublicBookingTest extends TestCase
             ->assertRedirect(route('booking.start'));
 
         $this->assertDatabaseCount('patient_portal_accesses', 0);
-        $this->get('/mis-citas/' . $portalToken)->assertNotFound();
+        $this->get('/mis-citas/'.$portalToken)->assertNotFound();
     }
 
     public function test_public_booking_does_not_attach_a_known_phone_to_an_existing_patient(): void
@@ -248,7 +248,7 @@ class PublicBookingTest extends TestCase
         $this->assertDatabaseCount('patients', 2);
         $this->assertDatabaseHas('patients', ['id' => $existingPatient->id, 'name' => 'Paciente existente']);
         $this->get('/mis-citas')
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->component('Booking/Appointments')
                 ->has('appointments', 1)
                 ->where('appointments.0.service_name', $service->name));
@@ -283,10 +283,12 @@ class PublicBookingTest extends TestCase
     public function test_patient_cannot_cancel_within_the_configured_deadline(): void
     {
         $this->travelTo(Carbon::parse('2026-10-11 07:00:00', 'America/Mazatlan'));
-        $service = Service::factory()->create();
+        $service = Service::factory()->create(['duration_minutes' => 30, 'buffer_minutes' => 15]);
+        $dentist = Dentist::query()->where('name', 'Equipo dental')->firstOrFail();
 
         $this->post('/reservar', [
             'service_id' => $service->id,
+            'dentist_id' => $dentist->id,
             'date' => '2026-10-12',
             'starts_at' => '2026-10-12T10:00',
             'name' => 'Paciente de prueba',

@@ -108,7 +108,12 @@ export default function Index({ patients, filters, totalPatients, flash = {} }) 
                                         <article key={patient.id} className="flex items-center gap-3 px-4 py-4 sm:px-6">
                                             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e8eef4] text-xs font-semibold text-[#416984] dark:bg-[#293a47] dark:text-[#c3daea]">{initials(patient.name)}</span>
                                             <div className="min-w-0 flex-1">
-                                                <h3 className="truncate text-sm font-semibold">{patient.name}</h3>
+                                                <Link
+                                                    href={`/admin?patient_id=${patient.id}`}
+                                                    className="truncate text-sm font-semibold text-[#416984] hover:underline dark:text-[#a9c9df] dark:hover:text-[#c0cbd3]"
+                                                >
+                                                    {patient.name}
+                                                </Link>
                                                 <p className="mt-1 truncate text-sm text-[#718078] dark:text-[#a0afb9]">{patient.email || 'Sin correo registrado'}</p>
                                             </div>
                                             <a href={`tel:${patient.phone}`} className="shrink-0 text-right text-sm font-medium text-[#416984] hover:underline dark:text-[#a9c9df]">{patient.phone}</a>

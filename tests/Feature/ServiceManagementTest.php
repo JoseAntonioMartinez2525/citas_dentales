@@ -13,9 +13,9 @@ class ServiceManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function authenticate(): void
+    private function authenticate(): static
     {
-        $this->actingAs(User::factory()->administrator()->create());
+        return $this->actingAs(User::factory()->administrator()->create());
     }
 
     public function test_admin_can_view_services_index(): void

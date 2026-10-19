@@ -24,5 +24,7 @@ export default defineConfig({
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
+        host: 'citas_dentales',
+        port: 5173,
     },
 });
