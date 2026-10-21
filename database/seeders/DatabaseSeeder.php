@@ -31,6 +31,42 @@ class DatabaseSeeder extends Seeder
         );
         $administrator->forceFill(['is_admin' => true])->save();
 
+        // Empleados y usuarios de la clínica (según Casos-uso-usabilidad.md)
+        $adminPassword = Hash::make('password');
+        $userPasswords = [
+            'miguel.torres@clinicadental.com' => $adminPassword,
+            'roberto.mendez@clinicadental.com' => Hash::make('roberto2026'),
+            'julian.ortega@clinicadental.com' => Hash::make('julian2026'),
+            'carlos.ramirez@clinicadental.com' => Hash::make('carlos2026'),
+            'sofia.herrera@clinicadental.com' => Hash::make('sofia2026'),
+            'maria.gonzalez@clinicadental.com' => Hash::make('maria2026'),
+            'ana.lopez@clinicadental.com' => Hash::make('ana2026'),
+            'diego.castro@clinicadental.com' => Hash::make('diego2026'),
+            'laura.fernandez@clinicadental.com' => Hash::make('laura2026'),
+            'patricia.rojas@clinicadental.com' => Hash::make('patricia2026'),
+        ];
+
+        collect([
+            ['name' => 'Miguel Ángel Torres', 'email' => 'miguel.torres@clinicadental.com', 'is_admin' => true],
+            ['name' => 'Roberto Méndez', 'email' => 'roberto.mendez@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Julián Ortega', 'email' => 'julian.ortega@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Carlos Ramírez', 'email' => 'carlos.ramirez@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Sofía Herrera', 'email' => 'sofia.herrera@clinicadental.com', 'is_admin' => false],
+            ['name' => 'María González', 'email' => 'maria.gonzalez@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Ana López', 'email' => 'ana.lopez@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Diego Castro', 'email' => 'diego.castro@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Laura Fernández', 'email' => 'laura.fernandez@clinicadental.com', 'is_admin' => false],
+            ['name' => 'Patricia Rojas', 'email' => 'patricia.rojas@clinicadental.com', 'is_admin' => false],
+        ])->each(fn (array $attributes) => User::query()->firstOrCreate(
+            ['email' => $attributes['email']],
+            [
+                'name' => $attributes['name'],
+                'password' => $userPasswords[$attributes['email']] ?? $adminPassword,
+                'is_admin' => $attributes['is_admin'],
+                'email_verified_at' => now(),
+            ],
+        ));
+
         $services = collect([
             [
                 'name' => 'Valoración general',
